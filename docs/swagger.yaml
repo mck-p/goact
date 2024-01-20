@@ -1,0 +1,372 @@
+basePath: /
+definitions:
+  data.AstroCondition:
+    properties:
+      is_sun_up:
+        type: number
+      moon_illumination:
+        type: number
+      moon_phase:
+        type: string
+      moonrise:
+        type: string
+      moonset:
+        type: string
+      sunrise:
+        type: string
+      sunset:
+        type: string
+    type: object
+  data.CurrentWeatherUpstreamResponse:
+    properties:
+      cloud:
+        type: number
+      condition:
+        $ref: "#/definitions/data.WeatherCondition"
+      feelslike_c:
+        type: number
+      feelslike_f:
+        type: number
+      gust_kph:
+        type: number
+      gust_mph:
+        type: number
+      humidity:
+        type: number
+      precip_in:
+        type: number
+      precip_mm:
+        type: number
+      pressure_in:
+        type: number
+      pressure_mb:
+        type: number
+      temp_c:
+        type: number
+      temp_f:
+        type: number
+      uv:
+        type: number
+      vis_km:
+        type: number
+      vis_miles:
+        type: number
+      wind_degree:
+        type: number
+      wind_dir:
+        type: string
+      wind_kph:
+        type: number
+      wind_mph:
+        type: number
+    type: object
+  data.DayWeatherUpstreamResponse:
+    properties:
+      avghumidity:
+        type: number
+      avgtemp_c:
+        type: number
+      avgtemp_f:
+        type: number
+      avgvis_km:
+        type: number
+      avgvis_miles:
+        type: number
+      condition:
+        $ref: "#/definitions/data.WeatherCondition"
+      daily_chance_of_rain:
+        type: number
+      daily_chance_of_snow:
+        type: number
+      daily_will_it_rain:
+        type: number
+      daily_will_it_snow:
+        type: number
+      maxtemp_c:
+        type: number
+      maxtemp_f:
+        type: number
+      mintemp_c:
+        type: number
+      mintemp_f:
+        type: number
+      totalprecip_in:
+        type: number
+      totalprecip_mm:
+        type: number
+      totalsnow_cm:
+        type: number
+      uv:
+        type: number
+      windchill_c:
+        type: number
+    type: object
+  data.ForecastQueryUpstreamResponse:
+    properties:
+      current:
+        $ref: "#/definitions/data.CurrentWeatherUpstreamResponse"
+      forecast:
+        properties:
+          forecastday:
+            items:
+              $ref: "#/definitions/data.ForecastUpstreamResponse"
+            type: array
+        type: object
+    type: object
+  data.ForecastUpstreamResponse:
+    properties:
+      astro:
+        $ref: "#/definitions/data.AstroCondition"
+      day:
+        $ref: "#/definitions/data.DayWeatherUpstreamResponse"
+      hour:
+        items:
+          $ref: "#/definitions/data.HourWeatherUpstreamResponse"
+        type: array
+    type: object
+  data.HourWeatherUpstreamResponse:
+    properties:
+      condition:
+        $ref: "#/definitions/data.WeatherCondition"
+      temp_c:
+        type: number
+      temp_f:
+        type: number
+      time:
+        type: string
+      time_epoch:
+        type: integer
+      windchill_c:
+        type: number
+      windchill_f:
+        type: number
+    type: object
+  data.WeatherCondition:
+    properties:
+      code:
+        type: number
+      icon:
+        type: string
+      text:
+        type: string
+    type: object
+  server.ErrorResponse-server_GenericError:
+    properties:
+      error:
+        $ref: "#/definitions/server.GenericError"
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: "#/definitions/server.Link"
+        type: object
+      metadata: {}
+    type: object
+  server.ErrorResponse-server_HealthcheckResponse:
+    properties:
+      error:
+        $ref: "#/definitions/server.HealthcheckResponse"
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: "#/definitions/server.Link"
+        type: object
+      metadata: {}
+    type: object
+  server.GenericError:
+    properties:
+      message:
+        type: string
+    type: object
+  server.GetMessageResponse:
+    properties:
+      messages:
+        items: {}
+        type: array
+    type: object
+  server.HealthcheckResponse:
+    properties:
+      healthy:
+        type: boolean
+      status:
+        type: integer
+    type: object
+  server.Link:
+    properties:
+      href:
+        type: string
+      hreflang:
+        type: string
+      link:
+        $ref: "#/definitions/server.Link"
+      meta: {}
+      rel:
+        type: string
+      title:
+        type: string
+    type: object
+  server.SuccessResponse-any:
+    properties:
+      data: {}
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: "#/definitions/server.Link"
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-data_ForecastQueryUpstreamResponse:
+    properties:
+      data:
+        $ref: "#/definitions/data.ForecastQueryUpstreamResponse"
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: "#/definitions/server.Link"
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-server_GetMessageResponse:
+    properties:
+      data:
+        $ref: "#/definitions/server.GetMessageResponse"
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: "#/definitions/server.Link"
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-server_HealthcheckResponse:
+    properties:
+      data:
+        $ref: "#/definitions/server.HealthcheckResponse"
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: "#/definitions/server.Link"
+        type: object
+      metadata: {}
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@mck-p.com
+    name: API Support
+  description: goact API
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+  title: goact RESTful API
+  version: 0.0.1
+paths:
+  /.well-known/healthcheck:
+    get:
+      description: Can be used for both readiness and liveness
+      operationId: Healthcheck
+      produces:
+        - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/server.SuccessResponse-server_HealthcheckResponse"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/server.ErrorResponse-server_HealthcheckResponse"
+      summary: Returns the health of the underlying system
+      tags:
+        - Internal
+  /api/v1/users/:id/messages:
+    get:
+      operationId: GetMessages
+      parameters:
+        - description: User ID
+          in: path
+          name: id
+          required: true
+          type: string
+        - description: Limit for pagination
+          in: query
+          name: limit
+          type: integer
+        - description: Offset for pagination
+          in: query
+          name: offset
+          type: integer
+      produces:
+        - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/server.SuccessResponse-server_GetMessageResponse"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/server.ErrorResponse-server_GenericError"
+      summary: Retrieves the last N number of messages, given some offset
+      tags:
+        - Users
+  /api/v1/weather:
+    get:
+      operationId: GetWeather
+      produces:
+        - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/server.SuccessResponse-data_ForecastQueryUpstreamResponse"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/server.ErrorResponse-server_GenericError"
+      security:
+        - BearerToken: []
+      summary: Gets the last-checked weather conditions
+      tags:
+        - Weather
+  /api/v1/webhooks:
+    post:
+      consumes:
+        - application/json
+      description: Handles incoming webhooks
+      operationId: WebhookIngestion
+      parameters:
+        - description: Webhook payload
+          in: body
+          name: requestBody
+          required: true
+          schema:
+            additionalProperties: true
+            type: object
+      produces:
+        - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/server.SuccessResponse-any"
+      summary: Handle Webhook
+      tags:
+        - Internal
+securityDefinitions:
+  BearerToken:
+    description: JWT for authentication. Inclue Bearer
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
