@@ -1,6 +1,6 @@
-# Christ Like Client
+# Goact Client
 
 ## Overview
 
 This is the Client-Side Rendered React appliction that serves as
-the Client for the CL Family of Applications
+the Client for the Goact Family of Applications
