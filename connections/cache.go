@@ -80,3 +80,17 @@ func (cache *CacheConnection) IsHealthy(cmd IsHealthyCmd) (bool, error) {
 
 	return true, nil
 }
+
+type SubscribeCmd struct {
+	Topic string
+	CTX   context.Context
+}
+
+func (cache *CacheConnection) Subscribe(cmd SubscribeCmd) *redis.PubSub {
+	_, span := tracer.Tracer.Start(cmd.CTX, "Cache::Subscribe")
+	defer span.End()
+
+	subscription := cache.conn.Subscribe(cmd.CTX, cmd.Topic)
+
+	return subscription
+}
