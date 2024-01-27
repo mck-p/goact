@@ -73,6 +73,7 @@ func New() *Server {
 	app.Use(recover.New())
 	app.Use(cors.New())
 	app.Use(Middlewares.BearerAuthentication())
+	app.Use("/ws", Middlewares.WebsocketUpgrade())
 
 	for _, route := range routes {
 		switch strings.ToLower(route.Method) {

@@ -13,6 +13,7 @@ var Connections = &Connection{}
 func (connections *Connection) Connect() {
 	slog.Debug("Connections connecting")
 	Cache.Connect()
+	Database.Connect()
 }
 
 func (connections *Connection) Healthy(ctx context.Context) (bool, error) {

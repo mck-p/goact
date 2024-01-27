@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 )
@@ -44,5 +45,16 @@ var routes = []Route{
 		Method:   "post",
 		Path:     "/api/v1/webhooks",
 		Handlers: []fiber.Handler{Handlers.Webhook},
+	},
+	{
+		Method: "get",
+		Path:   "/ws",
+		Handlers: []fiber.Handler{websocket.New(Handlers.WebsocketHandler, websocket.Config{
+			Subprotocols: []string{
+				// Allow the connection to send Authorization tokens
+				// via Sec-WebSocket-Protocol header
+				"Authentication",
+			},
+		})},
 	},
 }

@@ -38,6 +38,7 @@ const Title = () => {
         <Route path="/profile">{translations('title.profile')}</Route>
         <Route path="/signup">{translations('title.signup')}</Route>
         <Route path="/signin">{translations('title.signin')}</Route>
+        <Route path="/messages">{translations('title.messages')}</Route>
         <Route>{translations('title.not-found')}</Route>
       </Switch>
     </Typography>
@@ -55,6 +56,9 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             <Link href="/profile">
               <Button>{translations('nav.buttons.profile.label')}</Button>
             </Link>
+            <Link href="/messages">
+              <Button>{translations('nav.buttons.messages.label')}</Button>
+            </Link>
           </>
         </Route>
         <Route path="/profile">
@@ -62,10 +66,23 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             <Link href="/dashboard">
               <Button>{translations('nav.buttons.dashboard.label')}</Button>
             </Link>
+            <Link href="/messages">
+              <Button>{translations('nav.buttons.messages.label')}</Button>
+            </Link>
+          </>
+        </Route>
+        <Route path="/messages">
+          <>
+            <Link href="/dashboard">
+              <Button>{translations('nav.buttons.dashboard.label')}</Button>
+            </Link>
+            <Link href="/profile">
+              <Button>{translations('nav.buttons.profile.label')}</Button>
+            </Link>
           </>
         </Route>
       </Switch>
-      <Link href="/signin" onClick={signOut}>
+      <Link href="/signout" onClick={signOut}>
         <Button>{translations('nav.buttons.signout.label')}</Button>
       </Link>
     </>

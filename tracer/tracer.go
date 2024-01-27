@@ -24,7 +24,7 @@ func initTracer() *sdktrace.TracerProvider {
 		panic(err)
 	}
 	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSampler(sdktrace.NeverSample()),
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(
 			resource.NewWithAttributes(
