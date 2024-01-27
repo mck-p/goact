@@ -1,10 +1,13 @@
 package server
 
 import (
+	"log/slog"
 	"strings"
 
+	"mck-p/goact/data"
 	"mck-p/goact/token"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -66,5 +69,43 @@ func (m *Middleware) OnlyAuthenticated() fiber.Handler {
 		// We know that claims is _something_ so we can
 		// move on
 		return c.Next()
+	}
+}
+
+func (m *Middleware) WebsocketUpgrade() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			authHeader := c.Get("Sec-WebSocket-Protocol")
+
+			if authHeader == "" {
+				return fiber.ErrForbidden
+			}
+
+			authToken := strings.Replace(authHeader, "Authentication, ", "", 1)
+
+			claims, err := token.Parse(authToken)
+
+			if err != nil {
+				slog.Warn("Error trying to parse claims from incoming websocket connection", slog.Any("error", err))
+
+				return fiber.ErrBadRequest
+			}
+
+			c.Locals("claims", claims)
+
+			user, err := data.Users.GetUserByExternalId(claims.Subject)
+
+			if err != nil {
+				slog.Warn("Error trying to get user by externalId", slog.Any("error", err), slog.String("externalId", claims.Subject))
+
+				return fiber.ErrForbidden
+			}
+
+			c.Locals("user", user)
+
+			return c.Next()
+		}
+
+		return fiber.ErrUpgradeRequired
 	}
 }

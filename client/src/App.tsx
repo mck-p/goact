@@ -5,6 +5,7 @@ import Signup from './pages/Signup'
 import SignIn from './pages/SignIn'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
+import Messages from './pages/Messages'
 import NotFound from './errors/NotFound'
 
 import TopBar from './components/TopBar'
@@ -24,7 +25,8 @@ const App = () => {
         <Route path="/signup" component={Signup} />
         <Route path="/signin" component={SignIn} />
         <Route path="/dashboard" component={Dashboard} />
-        <Route path="/Profile" component={Profile} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/messages" component={Messages} />
         <Route component={NotFound} />
       </Switch>
     </>

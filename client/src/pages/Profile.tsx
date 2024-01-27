@@ -1,7 +1,7 @@
 import React from 'react'
 import { UserProfile } from '@clerk/clerk-react'
 import styled from '@emotion/styled'
-import TopBar from '../components/TopBar'
+
 
 const Page = styled.main`
   padding: 1rem;

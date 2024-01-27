@@ -5,3 +5,12 @@ services:
     ports:
       - "9999:6379"
     command: redis-server --requirepass ou812
+  
+  database:
+    image: postgres:16.1
+    ports:
+      - "9998:5432"
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: ou812
+      POSTGRES_DB: goact

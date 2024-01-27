@@ -1,10 +1,15 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
+	"log/slog"
 	"mck-p/goact/data"
+	"mck-p/goact/domains"
 	"mck-p/goact/tracer"
 	"mck-p/goact/usecases"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -149,7 +154,9 @@ func (handlers *Handler) GetWeather(c *fiber.Ctx) error {
 // @Description Handles incoming webhooks
 // @Tags Internal
 // @Accept json
+//
 //	@Produce	application/vnd.api+json
+//
 // @Param requestBody body map[string]interface{} true "Webhook payload"
 // @Success 200 {object} SuccessResponse[any]
 // @Router /api/v1/webhooks [post]
@@ -159,17 +166,17 @@ func (handlers *Handler) Webhook(c *fiber.Ctx) error {
 
 	/**
 
-		There are many different webhooks that could be coming. We need to
-		offload all of that checking to downstream consumers. So. We need
-		to pass them the _raw bytes_ of the body so that they can process
-		those once we get there and they can parse it correctly for their
-		needs.
+	There are many different webhooks that could be coming. We need to
+	offload all of that checking to downstream consumers. So. We need
+	to pass them the _raw bytes_ of the body so that they can process
+	those once we get there and they can parse it correctly for their
+	needs.
 	*/
 	rawBody := c.Body()
 	/**
-		
-		We also want to be able to parse it the basic upper level
-		structure to be able to switch on what type of webhook it is
+
+	We also want to be able to parse it the basic upper level
+	structure to be able to switch on what type of webhook it is
 
 	*/
 	payload := map[string]interface{}{}
@@ -180,13 +187,13 @@ func (handlers *Handler) Webhook(c *fiber.Ctx) error {
 	}
 
 	cmd := usecases.AuthWebhookCmd{
-		CTX: c.UserContext(),
+		CTX:     c.UserContext(),
 		Webhook: payload,
 	}
 
 	/**
 
-		TODO:: ENSURE THIS IS VALIDATED TO BE FROM SOMEONE WE TRUST
+	TODO:: ENSURE THIS IS VALIDATED TO BE FROM SOMEONE WE TRUST
 	*/
 	err = usecases.UseCases.ProcessAuthWebhook(cmd, rawBody)
 
@@ -197,4 +204,77 @@ func (handlers *Handler) Webhook(c *fiber.Ctx) error {
 	return JSONAPI(c, 200, fiber.Map{
 		"true": true,
 	})
+}
+
+type WebsocketMessage struct {
+	Action   domains.Action   `json:"action"`
+	Payload  domains.Payload  `json:"payload"`
+	Metadata domains.Metadata `json:"metadata"`
+}
+
+func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
+	// websocket.Conn bindings https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc#pkg-index
+	var (
+		msg []byte
+		err error
+	)
+
+	for {
+		_, msg, err = c.ReadMessage()
+
+		if err != nil {
+			slog.Warn("Error parsing incoming message", slog.Any("error", err))
+			break
+		}
+
+		incomingMessage := WebsocketMessage{}
+
+		err = json.Unmarshal(msg, &incomingMessage)
+
+		if err != nil {
+			slog.Warn("Error parsing incoming websocket message", slog.Any("error", err))
+			break
+		}
+
+		user := c.Locals("user").(*data.User)
+
+		if user == nil {
+			slog.Warn("No user when parsing locals")
+			break
+		}
+
+		cmd := usecases.WebSocketMessageCmd{
+			CTX:      context.TODO(),
+			ActorId:  user.Id,
+			Action:   incomingMessage.Action,
+			Payload:  incomingMessage.Payload,
+			Metadata: incomingMessage.Metadata,
+			Dispatch: func(cmd usecases.WebSocketMessageCmd) error {
+				_, span := tracer.Tracer.Start(cmd.CTX, "Websockets::Dispatch")
+				defer span.End()
+
+				slog.Debug("Sending new message", slog.Any("action", cmd.Action), slog.Any("receiver_id", user.Id))
+
+				outgoingMsg := WebsocketMessage{
+					Action:   cmd.Action,
+					Payload:  cmd.Payload,
+					Metadata: cmd.Metadata,
+				}
+
+				if err = c.WriteJSON(outgoingMsg); err != nil {
+					slog.Warn("Error trying to send message", slog.Any("action", outgoingMsg.Action))
+
+					return err
+				}
+
+				return nil
+			},
+		}
+
+		err = usecases.UseCases.ProcessWebSocketMessage(cmd)
+
+		if err != nil {
+			slog.Warn("There was an error processing a websocket message", slog.Any("action", incomingMessage.Action))
+		}
+	}
 }

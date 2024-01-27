@@ -6,6 +6,8 @@ export default {
   ['title.profile']: 'Profile',
   ['title.signup']: 'Sign Up',
   ['title.signin']: 'Sign In',
+  ['title.messages']: 'Messages',
+
   ['title.not-found']: 'Not Found',
 
   /**
@@ -16,6 +18,7 @@ export default {
   ['nav.buttons.profile.label']: 'Profile',
   ['nav.buttons.signin.label']: 'Sign In',
   ['nav.buttons.signup.label']: 'Sign Up',
+  ['nav.buttons.messages.label']: 'Messages',
 
   /**
    * PAGE-LEVEL CONCERNS

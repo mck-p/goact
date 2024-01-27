@@ -2,6 +2,7 @@ import React, { StrictMode } from 'react'
 import Router from './router'
 import Auth from './auth'
 import Theme from './theme'
+import ReduxWebSocket from './reduxWebsocket'
 
 import Catch from '../errors/Catch'
 import State from '../state/provider'
@@ -24,9 +25,11 @@ const Global = ({ children }: { children: React.ReactElement }) => (
     >
       <Auth>
         <State>
-          <Theme>
-            <Router>{children}</Router>
-          </Theme>
+          <ReduxWebSocket>
+            <Theme>
+              <Router>{children}</Router>
+            </Theme>
+          </ReduxWebSocket>
         </State>
       </Auth>
     </Catch>

@@ -7,8 +7,11 @@ import (
 	"log/slog"
 	"mck-p/goact/connections"
 	"mck-p/goact/data"
+	"mck-p/goact/domains"
 	"mck-p/goact/tracer"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type UseCase struct{}
@@ -78,20 +81,19 @@ func (usecases *UseCase) GetWeather(ctx context.Context, query string) (data.For
 	return *weather, err
 }
 
-
 func (usecases *UseCase) ProcessUserCreatedWebhook(webhook data.AuthEvent[data.UserCreatedEventData]) error {
 	return nil
 }
 
 type AuthWebhookCmd struct {
-	CTX context.Context
+	CTX     context.Context
 	Webhook map[string]interface{}
 }
 
 func (usecases *UseCase) ProcessAuthWebhook(cmd AuthWebhookCmd, rawBody []byte) error {
 	_, span := tracer.Tracer.Start(cmd.CTX, "UseCases::ProcessAuthWebhook")
 	defer span.End()
-	
+
 	baseCommand := cmd.Webhook
 
 	switch baseCommand["type"] {
@@ -105,7 +107,7 @@ func (usecases *UseCase) ProcessAuthWebhook(cmd AuthWebhookCmd, rawBody []byte) 
 		}
 
 		slog.Info("We need to create a user", slog.Any("user", createdCmd))
-	
+
 		return usecases.ProcessUserCreatedWebhook(createdCmd)
 	default:
 		slog.Warn("We got an Auth Webhook command that we do not know how to handle", slog.String("type", baseCommand["Type"].(string)))
@@ -114,6 +116,53 @@ func (usecases *UseCase) ProcessAuthWebhook(cmd AuthWebhookCmd, rawBody []byte) 
 	// if cmd.Webhook.Type == "user.created" {
 	// 	res = cmd.Webhook.(data.AuthEvent[data.UserCreatedEvent])
 	// }
+
+	return nil
+}
+
+type WebSocketMessageCmd struct {
+	CTX      context.Context
+	ActorId  string
+	Action   domains.Action
+	Payload  domains.Payload
+	Metadata domains.Metadata
+	Dispatch func(cmd WebSocketMessageCmd) error
+}
+
+func (usecases *UseCase) ProcessWebSocketMessage(cmd WebSocketMessageCmd) error {
+	_, span := tracer.Tracer.Start(cmd.CTX, "UseCases::ProcessWebSocketMessage")
+	defer span.End()
+
+	ctx, cancel := context.WithCancel(cmd.CTX)
+
+	defer cancel()
+
+	processedAt := time.Now()
+
+	if cmd.Metadata != nil {
+		cmd.Metadata["processedAt"] = processedAt
+	} else {
+		cmd.Metadata = map[string]interface{}{
+			"processedAt": processedAt,
+		}
+	}
+
+	domains.Domains.Process(domains.Command{
+		Id:       uuid.New().String(),
+		Action:   cmd.Action,
+		Payload:  cmd.Payload,
+		Metadata: cmd.Metadata,
+		CTX:      ctx,
+		Dispatch: func(outgoingCmd domains.Command) {
+			cmd.Dispatch(WebSocketMessageCmd{
+				CTX:      ctx,
+				ActorId:  cmd.ActorId,
+				Action:   outgoingCmd.Action,
+				Payload:  outgoingCmd.Payload,
+				Metadata: outgoingCmd.Metadata,
+			})
+		},
+	})
 
 	return nil
 }

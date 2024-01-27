@@ -6,4 +6,5 @@ export default Pino({
     version: process.env.VERSION,
   }),
   serializers: Pino.stdSerializers,
+  level: process.env.LOG_LEVEL || 'trace',
 })
