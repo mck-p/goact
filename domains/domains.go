@@ -3,6 +3,7 @@ package domains
 import (
 	"context"
 	"log/slog"
+	"mck-p/goact/commands"
 	"mck-p/goact/tracer"
 	"sync"
 )
@@ -11,29 +12,28 @@ import (
 Shared Types
 */
 
-type Action string
-
-type Payload map[string]interface{}
-
-type Metadata map[string]interface{}
-
 type Command struct {
-	Id       string   `json:"id"`
-	Action   Action   `json:"action"`
-	Payload  Payload  `json:"payload"`
-	Metadata Metadata `json:"metadata"`
-	CTX      context.Context
-	Dispatch func(Command)
+	Id               string            `json:"id"`
+	ActorId          string            `json:"actor_id"`
+	Action           string            `json:"action"`
+	Payload          commands.Payload  `json:"payload"`
+	Metadata         commands.Metadata `json:"metadata"`
+	CTX              context.Context
+	DispatchOutgoing func(Command)
 }
 
 type Domain interface {
-	ShouldHandle(Action) bool
+	ShouldHandle(string) bool
 	Process(Command, *sync.WaitGroup) error
 }
 
 type IDomains struct{}
 
 var Domains = IDomains{}
+
+func (command *Command) Dispatch(cmd Command) {
+	go Domains.Process(cmd)
+}
 
 func (domains *IDomains) Process(cmd Command) {
 	var wg sync.WaitGroup

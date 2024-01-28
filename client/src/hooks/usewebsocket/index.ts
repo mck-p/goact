@@ -8,12 +8,14 @@ export interface WebSocketMessage {
   action: string
   payload: any
   metadata: any
+  id: string
 }
 
 const generateHelloMessage = () => ({
   action: '@@INTERNAL/HELLO',
   payload: {},
   metadata: {},
+  id: window.crypto.randomUUID(),
 })
 
 export const MessageLens = Lens.fromProp<WebSocketMessage>()
@@ -28,7 +30,7 @@ export const assignSentAt = MetadataLens.modify((metadata = {}) => ({
 
 export const assignReceivedAt = MetadataLens.modify((metadata = {}) => ({
   ...metadata,
-  receivedat: new Date().toISOString(),
+  receivedAt: new Date().toISOString(),
 }))
 
 export const encode = (msg: WebSocketMessage) => JSON.stringify(msg)
