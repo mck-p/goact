@@ -14,6 +14,7 @@ func (connections *Connection) Connect() {
 	slog.Debug("Connections connecting")
 	Cache.Connect()
 	Database.Connect()
+	Subscriptions.Connect()
 }
 
 func (connections *Connection) Healthy(ctx context.Context) (bool, error) {

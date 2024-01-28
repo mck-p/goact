@@ -3,14 +3,16 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
+	"mck-p/goact/commands"
 	"mck-p/goact/data"
-	"mck-p/goact/domains"
 	"mck-p/goact/tracer"
 	"mck-p/goact/usecases"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type Handler struct{}
@@ -207,9 +209,39 @@ func (handlers *Handler) Webhook(c *fiber.Ctx) error {
 }
 
 type WebsocketMessage struct {
-	Action   domains.Action   `json:"action"`
-	Payload  domains.Payload  `json:"payload"`
-	Metadata domains.Metadata `json:"metadata"`
+	Id       string            `json:"id"`
+	Action   string            `json:"action"`
+	Payload  commands.Payload  `json:"payload"`
+	Metadata commands.Metadata `json:"metadata"`
+}
+
+func handleMessage(msg []byte, c *websocket.Conn, user *data.User, dispatch func(cmd usecases.WebSocketMessageCmd) error) error {
+	incomingMessage := WebsocketMessage{}
+
+	err := json.Unmarshal(msg, &incomingMessage)
+
+	if err != nil {
+		slog.Warn("Error parsing incoming websocket message", slog.Any("error", err))
+		return err
+	}
+
+	cmd := usecases.WebSocketMessageCmd{
+		CTX:      context.TODO(),
+		ActorId:  user.Id,
+		Action:   incomingMessage.Action,
+		Payload:  incomingMessage.Payload,
+		Metadata: incomingMessage.Metadata,
+		Dispatch: dispatch,
+	}
+
+	err = usecases.UseCases.ProcessWebSocketMessage(cmd)
+
+	if err != nil {
+		slog.Warn("There was an error processing a websocket message", slog.Any("action", incomingMessage.Action))
+		return err
+	}
+
+	return nil
 }
 
 func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
@@ -219,62 +251,103 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 		err error
 	)
 
-	for {
-		_, msg, err = c.ReadMessage()
+	user := c.Locals("user").(*data.User)
 
-		if err != nil {
-			slog.Warn("Error parsing incoming message", slog.Any("error", err))
-			break
+	if user == nil {
+		slog.Warn("No user when parsing locals")
+		return
+	}
+
+	messagesForUserChannel := usecases.UseCases.SubscribeToUserMessages(usecases.SubscribeToUserMessagesCmd{
+		CTX:     context.TODO(),
+		ActorId: user.Id,
+	})
+
+	quit := make(chan bool)
+
+	dispatchMessage := func(cmd usecases.WebSocketMessageCmd, conn *websocket.Conn) error {
+		_, span := tracer.Tracer.Start(cmd.CTX, "Websockets::Dispatch")
+		defer span.End()
+
+		if conn == nil {
+			quit <- true
+			return nil
 		}
 
-		incomingMessage := WebsocketMessage{}
+		slog.Debug("Sending new message", slog.Any("action", cmd.Action), slog.Any("receiverId", user.Id), slog.String("actorId", cmd.ActorId))
 
-		err = json.Unmarshal(msg, &incomingMessage)
+		cmd.Metadata["actorId"] = cmd.ActorId
 
-		if err != nil {
-			slog.Warn("Error parsing incoming websocket message", slog.Any("error", err))
-			break
+		outgoingMsg := WebsocketMessage{
+			Action:   fmt.Sprintf("@@SERVER-SENT/%s", cmd.Action),
+			Payload:  cmd.Payload,
+			Metadata: cmd.Metadata,
+			Id:       uuid.NewString(),
 		}
 
-		user := c.Locals("user").(*data.User)
+		if err = conn.WriteJSON(outgoingMsg); err != nil {
+			slog.Warn("Error trying to send message", slog.Any("action", outgoingMsg.Action), slog.Any("error", err))
 
-		if user == nil {
-			slog.Warn("No user when parsing locals")
-			break
+			return err
 		}
 
-		cmd := usecases.WebSocketMessageCmd{
-			CTX:      context.TODO(),
-			ActorId:  user.Id,
-			Action:   incomingMessage.Action,
-			Payload:  incomingMessage.Payload,
-			Metadata: incomingMessage.Metadata,
-			Dispatch: func(cmd usecases.WebSocketMessageCmd) error {
-				_, span := tracer.Tracer.Start(cmd.CTX, "Websockets::Dispatch")
-				defer span.End()
+		return nil
+	}
 
-				slog.Debug("Sending new message", slog.Any("action", cmd.Action), slog.Any("receiver_id", user.Id))
+	go func(conn *websocket.Conn) {
+		for msg := range messagesForUserChannel {
+			select {
+			case <-quit:
+				slog.Debug("We have been asked to quit the messaging for user channel")
 
-				outgoingMsg := WebsocketMessage{
-					Action:   cmd.Action,
-					Payload:  cmd.Payload,
-					Metadata: cmd.Metadata,
+				usecases.UseCases.UnsubscribeFromUserMessages(usecases.UnsubscribeToUserMessagesCmd{
+					ActorId: user.Id,
+					CTX:     context.TODO(),
+				})
+				return
+			default:
+				err := dispatchMessage(usecases.WebSocketMessageCmd{
+					ActorId:  msg.ActorId,
+					Payload:  msg.Payload,
+					Action:   msg.Action,
+					Metadata: msg.Metadata,
+				}, conn)
+
+				if err != nil {
+					quit <- true
 				}
+			}
 
-				if err = c.WriteJSON(outgoingMsg); err != nil {
-					slog.Warn("Error trying to send message", slog.Any("action", outgoingMsg.Action))
+		}
+	}(c)
 
-					return err
+out:
+	for {
+		select {
+		case <-quit:
+			return
+		default:
+			_, msg, err = c.ReadMessage()
+
+			if err != nil {
+				slog.Warn("Error parsing incoming message", slog.Any("error", err))
+				break out
+			}
+
+			err = handleMessage(msg, c, user, func(cmd usecases.WebSocketMessageCmd) error {
+				if c != nil {
+					return dispatchMessage(cmd, c)
 				}
 
 				return nil
-			},
-		}
+			})
 
-		err = usecases.UseCases.ProcessWebSocketMessage(cmd)
-
-		if err != nil {
-			slog.Warn("There was an error processing a websocket message", slog.Any("action", incomingMessage.Action))
+			if err != nil {
+				slog.Warn("Error handling message", slog.Any("error", err))
+				break out
+			}
 		}
 	}
+
+	slog.Debug("We have stopped processing at the handler level")
 }

@@ -30,6 +30,15 @@ dev-server:
 
 dev: dev-server dev-client
 
+start-services:
+	docker compose -f docker-compose.services.yaml up -d
+
+stop-services:
+	docker compose -f docker-compose.services.yaml stop
+
+reset-services:
+	docker compose -f docker-compose.services.yaml down
+
 #
 # How do we generate the output of the React application?
 #

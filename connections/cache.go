@@ -2,7 +2,9 @@ package connections
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
+	"mck-p/goact/commands"
 	"mck-p/goact/tracer"
 
 	"time"
@@ -93,4 +95,22 @@ func (cache *CacheConnection) Subscribe(cmd SubscribeCmd) *redis.PubSub {
 	subscription := cache.conn.Subscribe(cmd.CTX, cmd.Topic)
 
 	return subscription
+}
+
+func (cache *CacheConnection) Publish(cmd commands.PublishCmd) error {
+	_, span := tracer.Tracer.Start(cmd.CTX, "Cache::Subscribe")
+	defer span.End()
+
+	if cache.conn != nil {
+		slog.Debug("Publishing message", slog.Any("data", cmd.Data), slog.String("topic", cmd.Topic))
+		body, err := json.Marshal(cmd.Data)
+
+		if err != nil {
+			return err
+		}
+
+		return cache.conn.Publish(cmd.CTX, cmd.Topic, body).Err()
+	}
+
+	return nil
 }

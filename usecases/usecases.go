@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"mck-p/goact/commands"
 	"mck-p/goact/connections"
 	"mck-p/goact/data"
 	"mck-p/goact/domains"
@@ -123,9 +124,9 @@ func (usecases *UseCase) ProcessAuthWebhook(cmd AuthWebhookCmd, rawBody []byte) 
 type WebSocketMessageCmd struct {
 	CTX      context.Context
 	ActorId  string
-	Action   domains.Action
-	Payload  domains.Payload
-	Metadata domains.Metadata
+	Action   string
+	Payload  commands.Payload
+	Metadata commands.Metadata
 	Dispatch func(cmd WebSocketMessageCmd) error
 }
 
@@ -153,7 +154,8 @@ func (usecases *UseCase) ProcessWebSocketMessage(cmd WebSocketMessageCmd) error 
 		Payload:  cmd.Payload,
 		Metadata: cmd.Metadata,
 		CTX:      ctx,
-		Dispatch: func(outgoingCmd domains.Command) {
+		ActorId:  cmd.ActorId,
+		DispatchOutgoing: func(outgoingCmd domains.Command) {
 			cmd.Dispatch(WebSocketMessageCmd{
 				CTX:      ctx,
 				ActorId:  cmd.ActorId,
@@ -165,4 +167,33 @@ func (usecases *UseCase) ProcessWebSocketMessage(cmd WebSocketMessageCmd) error 
 	})
 
 	return nil
+}
+
+type SubscribeToUserMessagesCmd struct {
+	CTX     context.Context
+	ActorId string
+}
+
+func (usecases *UseCase) SubscribeToUserMessages(cmd SubscribeToUserMessagesCmd) <-chan commands.PubSubCommand {
+	_, span := tracer.Tracer.Start(cmd.CTX, "UseCases::SubscribeToUserMessages")
+	defer span.End()
+	key := fmt.Sprintf("message::to::%s", cmd.ActorId)
+	slog.Info("Subscribing", slog.String("key", key))
+
+	return connections.Subscriptions.Subscribe(cmd.CTX, key)
+}
+
+type UnsubscribeToUserMessagesCmd struct {
+	CTX     context.Context
+	ActorId string
+}
+
+func (usecases *UseCase) UnsubscribeFromUserMessages(cmd UnsubscribeToUserMessagesCmd) {
+	_, span := tracer.Tracer.Start(cmd.CTX, "UseCases::UnsubscribeFromUserMessages")
+	defer span.End()
+	key := fmt.Sprintf("message::to::%s", cmd.ActorId)
+
+	slog.Info("Unsubscribing", slog.String("key", key))
+
+	connections.Subscriptions.Unsubscribe(cmd.CTX, key)
 }

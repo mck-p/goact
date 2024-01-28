@@ -2,20 +2,21 @@ package domains
 
 import (
 	"log/slog"
+	"mck-p/goact/commands"
 	"mck-p/goact/tracer"
 	"sync"
 )
 
 const (
-	Hello   Action = "@@INTERNAL/HELLO"
-	ISeeYou Action = "@@INTERNAL/ISEEYOU"
+	Hello   string = "@@INTERNAL/HELLO"
+	ISeeYou string = "@@INTERNAL/ISEEYOU"
 )
 
 type InternalDomain struct{}
 
 var Internal = &InternalDomain{}
 
-func (messages *InternalDomain) ShouldHandle(action Action) bool {
+func (messages *InternalDomain) ShouldHandle(action string) bool {
 	return action == Hello
 }
 
@@ -26,10 +27,10 @@ func (messages *InternalDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 
 	slog.Info("Handling internal message", slog.Any("command", cmd.Id))
 
-	cmd.Dispatch(Command{
+	cmd.DispatchOutgoing(Command{
 		Action:   ISeeYou,
-		Payload:  Payload{},
-		Metadata: Metadata{},
+		Payload:  commands.Payload{},
+		Metadata: commands.Metadata{},
 	})
 
 	return nil

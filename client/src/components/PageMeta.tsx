@@ -10,22 +10,27 @@ const PageMeta = () => {
     <Switch>
       <Route path="/dashboard">
         <Helmet>
-          <title>{translations('title.dashboard')} | Christ Like</title>
+          <title>{translations('title.dashboard')} | Goact</title>
         </Helmet>
       </Route>
       <Route path="/profile">
         <Helmet>
-          <title>{translations('title.profile')} | Christ Like</title>
+          <title>{translations('title.profile')} | Goact</title>
         </Helmet>
       </Route>
       <Route path="/signup">
         <Helmet>
-          <title>{translations('title.signup')} | Christ Like</title>
+          <title>{translations('title.signup')} | Goact</title>
         </Helmet>
       </Route>
       <Route path="/signin">
         <Helmet>
-          <title>{translations('title.signin')} | Christ Like</title>
+          <title>{translations('title.signin')} | Goact</title>
+        </Helmet>
+      </Route>
+      <Route path="/messages">
+        <Helmet>
+          <title>{translations('title.messages')} | Goact</title>
         </Helmet>
       </Route>
     </Switch>
