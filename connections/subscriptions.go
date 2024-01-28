@@ -46,6 +46,8 @@ func (subscriptions *ISubscriptions) Unsubscribe(ctx context.Context, topic stri
 	}
 
 	subscription.Subscription.Close()
+
+	delete(subscriptions.currentSubscriptions, topic)
 }
 
 func (subscriptions *ISubscriptions) Subscribe(ctx context.Context, topic string) <-chan commands.PubSubCommand {

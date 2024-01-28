@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { Button, Paper, TextField, Typography } from '@mui/material'
+import { Button, Divider, Paper, TextField, Typography } from '@mui/material'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { formatDistanceToNow } from 'date-fns'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
@@ -184,13 +185,6 @@ const MessageList = styled(Paper)`
 
   /* === A bit of a gross hack so we can have bleeding divs/blockquotes. */
 
-  p,
-  *:not(div):not(img):not(body):not(html):not(li):not(blockquote):not(p) {
-    margin: 1rem auto 1rem;
-    max-width: 36rem;
-    padding: 0.25rem;
-  }
-
   div {
     width: 100%;
   }
@@ -247,6 +241,24 @@ const MessageList = styled(Paper)`
   }
 `
 
+const Message = styled.div`
+  width: 100%;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+
+  p {
+    margin: 0;
+  }
+`
+
+const MessageTimestamp = styled.time`
+  font-size: 0.75rem;
+`
+
+const MessageWrap = styled.div`
+  padding-bottom: 2rem;
+`
+
 const Form = styled.form`
   width: 95%;
   max-width: 1440px;
@@ -290,40 +302,49 @@ const Profile = () => {
 
     form.reset()
   }
-
+  const displayMessages = messages.filter(
+    ({ action }) => !action.includes('@@INTERNAL'),
+  )
   return (
     <Page>
       <Typography variant="h2">Messages</Typography>
       <MessageList>
-        {messages
-          .filter(({ action, payload }) => !action.includes('@@INTERNAL'))
-          .map((message, i) => (
-            <Markdown
-              key={message.id}
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code({ node, inline, className, children, ...props }: any) {
-                  const match = /language-(\w+)/.exec(className || '')
-                  return !inline && match ? (
-                    <SyntaxHighlighter
-                      style={a11yDark}
-                      language={match[1]}
-                      PreTag="div"
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  ) : (
-                    <code className="md-post-code" {...props}>
-                      {children}
-                    </code>
-                  )
-                },
-              }}
-            >
-              {message.payload.message}
-            </Markdown>
-          ))}
+        {displayMessages.map((message, i) => (
+          <MessageWrap key={message.id}>
+            <Message>
+              <Markdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code({ node, inline, className, children, ...props }: any) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={a11yDark}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className="md-post-code" {...props}>
+                        {children}
+                      </code>
+                    )
+                  },
+                }}
+              >
+                {message.payload.message}
+              </Markdown>
+              <MessageTimestamp dateTime={message.metadata.receivedAt}>
+                {formatDistanceToNow(new Date(message.metadata.receivedAt), {
+                  addSuffix: true,
+                })}
+              </MessageTimestamp>
+            </Message>
+            {i !== displayMessages.length - 1 ? <Divider /> : null}
+          </MessageWrap>
+        ))}
       </MessageList>
       <Form onSubmit={handleFormSubmit}>
         <TextField label="Message" name="message" multiline />

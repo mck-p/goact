@@ -299,11 +299,6 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 			select {
 			case <-quit:
 				slog.Debug("We have been asked to quit the messaging for user channel")
-
-				usecases.UseCases.UnsubscribeFromUserMessages(usecases.UnsubscribeToUserMessagesCmd{
-					ActorId: user.Id,
-					CTX:     context.TODO(),
-				})
 				return
 			default:
 				err := dispatchMessage(usecases.WebSocketMessageCmd{
@@ -315,6 +310,7 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 
 				if err != nil {
 					quit <- true
+					return
 				}
 			}
 
@@ -350,4 +346,8 @@ out:
 	}
 
 	slog.Debug("We have stopped processing at the handler level")
+	usecases.UseCases.UnsubscribeFromUserMessages(usecases.UnsubscribeToUserMessagesCmd{
+		ActorId: user.Id,
+		CTX:     context.TODO(),
+	})
 }
