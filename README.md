@@ -20,7 +20,7 @@ using Clerk.com as the authentication service
 - Swagger Docs
   - You can go to `/docs` on the API service to find Swagger docs and a UI for
     exploring the APIs available.
-- Authentication via [Clerk](clerk.dev)
+- Authentication via [Clerk](https://clerk.dev)
 
 ## Development
 
