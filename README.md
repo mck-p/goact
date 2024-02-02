@@ -23,7 +23,7 @@ using Clerk.com as the authentication service
   - You will need to register the appropriate URL for your environment in your own Clerk dashboard
     - If you do not, you will not have Users inside of the database automatically when they sign
       up in Clerk. Which means you will need to manually `INSERT INTO users(externalId) VALUES('user_id_123')`
-      each time you want to onboard a User.
+      each time you want to onboard a User.recreate
     - For local development/testing, we are using [`ngrok`](https://ngrok.com/)
 
 ## Development
@@ -31,7 +31,9 @@ using Clerk.com as the authentication service
 ### Backing Services
 
 ```sh
-docker compose -f docker-compose.services.yaml up -d
+make start-services # start services
+make stop-services # stop services, keeps data
+make restart-services # destroy services, loses data
 ```
 
 ### API
