@@ -1,6 +1,8 @@
 package data
 
-import "mck-p/goact/connections"
+import (
+	"mck-p/goact/connections"
+)
 
 type UserData struct{}
 
@@ -22,4 +24,24 @@ func (users *UserData) GetUserByExternalId(id string) (*User, error) {
 
 	return &user, row.Scan(&user.Id, &user.ExternalId)
 
+}
+
+type CreateUserCmd struct {
+	Connection *connections.DatabaseConnection
+	ExternalId string
+}
+
+func (users *UserData) CreateUser(cmd CreateUserCmd) (*User, error) {
+	user := User{}
+	sql := `
+		INSERT INTO users
+			(externalId)
+		VALUES
+			($1)
+		RETURNING _id as id, externalId
+	`
+
+	row := cmd.Connection.QueryRow(sql, &user, cmd.ExternalId)
+
+	return &user, row.Scan(&user.Id, &user.ExternalId)
 }

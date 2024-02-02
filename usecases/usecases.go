@@ -82,8 +82,24 @@ func (usecases *UseCase) GetWeather(ctx context.Context, query string) (data.For
 	return *weather, err
 }
 
-func (usecases *UseCase) ProcessUserCreatedWebhook(webhook data.AuthEvent[data.UserCreatedEventData]) error {
-	return nil
+type ProcessUerCreateWebhookCmd struct {
+	Repository *data.UserData
+	Webhook    data.AuthEvent[data.UserCreatedEventData]
+}
+
+func (usecases *UseCase) ProcessUserCreatedWebhook(cmd ProcessUerCreateWebhookCmd) error {
+	_, err := cmd.Repository.CreateUser(data.CreateUserCmd{
+		ExternalId: cmd.Webhook.Data.Id,
+		Connection: connections.Database,
+	})
+
+	if err != nil {
+		slog.Warn("We could not handle the user creation webhook.", slog.Any("error", err), slog.String("external-id", cmd.Webhook.Data.Id))
+	} else {
+		slog.Debug("Handled a new webhook successfully")
+	}
+
+	return err
 }
 
 type GetUserByExternalIdRequest struct {
@@ -126,7 +142,10 @@ func (usecases *UseCase) ProcessAuthWebhook(cmd AuthWebhookCmd, rawBody []byte) 
 
 		slog.Info("We need to create a user", slog.Any("user", createdCmd))
 
-		return usecases.ProcessUserCreatedWebhook(createdCmd)
+		return usecases.ProcessUserCreatedWebhook(ProcessUerCreateWebhookCmd{
+			Webhook:    createdCmd,
+			Repository: data.Users,
+		})
 	default:
 		slog.Warn("We got an Auth Webhook command that we do not know how to handle", slog.String("type", baseCommand["Type"].(string)))
 	}
