@@ -1,6 +1,7 @@
 import { CurrentWeatherDTO, TodaysWeatherDTO } from './weather.schema'
+import { ROOT_URL } from './config'
 
-const ROOT_URL = 'http://localhost:8080/api/v1'
+const WEATHER_BASE_URL = `${ROOT_URL}/weather`
 
 export const transformCurrentWeather = (current: any) => ({
   feelslike: {
@@ -117,7 +118,7 @@ export const getCurrentWeather = async (
   token: string,
 ): Promise<{ current: CurrentWeatherDTO; today: TodaysWeatherDTO }> => {
   const result = await fetch(
-    `${ROOT_URL}/weather?query=${encodeURIComponent(query)}`,
+    `${WEATHER_BASE_URL}?query=${encodeURIComponent(query)}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

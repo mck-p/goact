@@ -151,6 +151,36 @@ func (handlers *Handler) GetWeather(c *fiber.Ctx) error {
 	return JSONAPI(c, 200, weather)
 }
 
+// GetUserByExternalId	godoc
+//
+//	@Id			GetUserByExternalId
+//	@Summary	Returns the Goact User based on their external ID
+//	@Tags		Users
+//	@Produce	application/vnd.api+json
+//	@Security	BearerToken
+//	@Success	200	{object}	SuccessResponse[data.User]
+//	@Failure	500	{object}	ErrorResponse[GenericError]
+//	@Router		/api/v1/users/external-id/{externalid} [get]
+func (handlers *Handler) GetUserByExternalId(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetUserByExternalId")
+	defer span.End()
+
+	externalId := c.Params("externalid")
+
+	user, err := usecases.UseCases.GetUserByExternalId(usecases.GetUserByExternalIdRequest{
+		Repository: data.Users,
+		ExternalId: externalId,
+	})
+
+	if err != nil {
+		slog.Warn("Error trying to get user by external ID", slog.Any("error", err), slog.String("external-id", externalId))
+
+		return err
+	}
+
+	return JSONAPI(c, 200, user)
+}
+
 // @Id WebhookIngestion
 // @Summary Handle Webhook
 // @Description Handles incoming webhooks

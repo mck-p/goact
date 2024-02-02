@@ -22,7 +22,7 @@ definitions:
       cloud:
         type: number
       condition:
-        $ref: "#/definitions/data.WeatherCondition"
+        $ref: '#/definitions/data.WeatherCondition'
       feelslike_c:
         type: number
       feelslike_f:
@@ -73,7 +73,7 @@ definitions:
       avgvis_miles:
         type: number
       condition:
-        $ref: "#/definitions/data.WeatherCondition"
+        $ref: '#/definitions/data.WeatherCondition'
       daily_chance_of_rain:
         type: number
       daily_chance_of_snow:
@@ -104,30 +104,30 @@ definitions:
   data.ForecastQueryUpstreamResponse:
     properties:
       current:
-        $ref: "#/definitions/data.CurrentWeatherUpstreamResponse"
+        $ref: '#/definitions/data.CurrentWeatherUpstreamResponse'
       forecast:
         properties:
           forecastday:
             items:
-              $ref: "#/definitions/data.ForecastUpstreamResponse"
+              $ref: '#/definitions/data.ForecastUpstreamResponse'
             type: array
         type: object
     type: object
   data.ForecastUpstreamResponse:
     properties:
       astro:
-        $ref: "#/definitions/data.AstroCondition"
+        $ref: '#/definitions/data.AstroCondition'
       day:
-        $ref: "#/definitions/data.DayWeatherUpstreamResponse"
+        $ref: '#/definitions/data.DayWeatherUpstreamResponse'
       hour:
         items:
-          $ref: "#/definitions/data.HourWeatherUpstreamResponse"
+          $ref: '#/definitions/data.HourWeatherUpstreamResponse'
         type: array
     type: object
   data.HourWeatherUpstreamResponse:
     properties:
       condition:
-        $ref: "#/definitions/data.WeatherCondition"
+        $ref: '#/definitions/data.WeatherCondition'
       temp_c:
         type: number
       temp_f:
@@ -141,6 +141,13 @@ definitions:
       windchill_f:
         type: number
     type: object
+  data.User:
+    properties:
+      _id:
+        type: string
+      externalid:
+        type: string
+    type: object
   data.WeatherCondition:
     properties:
       code:
@@ -153,26 +160,26 @@ definitions:
   server.ErrorResponse-server_GenericError:
     properties:
       error:
-        $ref: "#/definitions/server.GenericError"
+        $ref: '#/definitions/server.GenericError'
       includes:
         items: {}
         type: array
       links:
         additionalProperties:
-          $ref: "#/definitions/server.Link"
+          $ref: '#/definitions/server.Link'
         type: object
       metadata: {}
     type: object
   server.ErrorResponse-server_HealthcheckResponse:
     properties:
       error:
-        $ref: "#/definitions/server.HealthcheckResponse"
+        $ref: '#/definitions/server.HealthcheckResponse'
       includes:
         items: {}
         type: array
       links:
         additionalProperties:
-          $ref: "#/definitions/server.Link"
+          $ref: '#/definitions/server.Link'
         type: object
       metadata: {}
     type: object
@@ -201,7 +208,7 @@ definitions:
       hreflang:
         type: string
       link:
-        $ref: "#/definitions/server.Link"
+        $ref: '#/definitions/server.Link'
       meta: {}
       rel:
         type: string
@@ -216,46 +223,59 @@ definitions:
         type: array
       links:
         additionalProperties:
-          $ref: "#/definitions/server.Link"
+          $ref: '#/definitions/server.Link'
         type: object
       metadata: {}
     type: object
   server.SuccessResponse-data_ForecastQueryUpstreamResponse:
     properties:
       data:
-        $ref: "#/definitions/data.ForecastQueryUpstreamResponse"
+        $ref: '#/definitions/data.ForecastQueryUpstreamResponse'
       includes:
         items: {}
         type: array
       links:
         additionalProperties:
-          $ref: "#/definitions/server.Link"
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-data_User:
+    properties:
+      data:
+        $ref: '#/definitions/data.User'
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
         type: object
       metadata: {}
     type: object
   server.SuccessResponse-server_GetMessageResponse:
     properties:
       data:
-        $ref: "#/definitions/server.GetMessageResponse"
+        $ref: '#/definitions/server.GetMessageResponse'
       includes:
         items: {}
         type: array
       links:
         additionalProperties:
-          $ref: "#/definitions/server.Link"
+          $ref: '#/definitions/server.Link'
         type: object
       metadata: {}
     type: object
   server.SuccessResponse-server_HealthcheckResponse:
     properties:
       data:
-        $ref: "#/definitions/server.HealthcheckResponse"
+        $ref: '#/definitions/server.HealthcheckResponse'
       includes:
         items: {}
         type: array
       links:
         additionalProperties:
-          $ref: "#/definitions/server.Link"
+          $ref: '#/definitions/server.Link'
         type: object
       metadata: {}
     type: object
@@ -276,93 +296,112 @@ paths:
       description: Can be used for both readiness and liveness
       operationId: Healthcheck
       produces:
-        - application/vnd.api+json
+      - application/vnd.api+json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/server.SuccessResponse-server_HealthcheckResponse"
+            $ref: '#/definitions/server.SuccessResponse-server_HealthcheckResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/server.ErrorResponse-server_HealthcheckResponse"
+            $ref: '#/definitions/server.ErrorResponse-server_HealthcheckResponse'
       summary: Returns the health of the underlying system
       tags:
-        - Internal
+      - Internal
   /api/v1/users/:id/messages:
     get:
       operationId: GetMessages
       parameters:
-        - description: User ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Limit for pagination
-          in: query
-          name: limit
-          type: integer
-        - description: Offset for pagination
-          in: query
-          name: offset
-          type: integer
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Limit for pagination
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
       produces:
-        - application/vnd.api+json
+      - application/vnd.api+json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/server.SuccessResponse-server_GetMessageResponse"
+            $ref: '#/definitions/server.SuccessResponse-server_GetMessageResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/server.ErrorResponse-server_GenericError"
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
       summary: Retrieves the last N number of messages, given some offset
       tags:
-        - Users
+      - Users
+  /api/v1/users/external-id/{externalid}:
+    get:
+      operationId: GetUserByExternalId
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_User'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      security:
+      - BearerToken: []
+      summary: Returns the Goact User based on their external ID
+      tags:
+      - Users
   /api/v1/weather:
     get:
       operationId: GetWeather
       produces:
-        - application/vnd.api+json
+      - application/vnd.api+json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/server.SuccessResponse-data_ForecastQueryUpstreamResponse"
+            $ref: '#/definitions/server.SuccessResponse-data_ForecastQueryUpstreamResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/server.ErrorResponse-server_GenericError"
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
       security:
-        - BearerToken: []
+      - BearerToken: []
       summary: Gets the last-checked weather conditions
       tags:
-        - Weather
+      - Weather
   /api/v1/webhooks:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Handles incoming webhooks
       operationId: WebhookIngestion
       parameters:
-        - description: Webhook payload
-          in: body
-          name: requestBody
-          required: true
-          schema:
-            additionalProperties: true
-            type: object
+      - description: Webhook payload
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
       produces:
-        - application/vnd.api+json
+      - application/vnd.api+json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/server.SuccessResponse-any"
+            $ref: '#/definitions/server.SuccessResponse-any'
       summary: Handle Webhook
       tags:
-        - Internal
+      - Internal
 securityDefinitions:
   BearerToken:
     description: JWT for authentication. Inclue Bearer
