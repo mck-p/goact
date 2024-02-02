@@ -57,4 +57,9 @@ var routes = []Route{
 			},
 		})},
 	},
+	{
+		Method:   "get",
+		Path:     "/api/v1/users/external-id/:externalid",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetUserByExternalId},
+	},
 }

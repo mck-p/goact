@@ -1,13 +1,15 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { Button, Divider, Paper, TextField, Typography } from '@mui/material'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { formatDistanceToNow } from 'date-fns'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-
 import styled from '@emotion/styled'
+import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+
+import { useUser } from '../hooks/useuser'
 import { WebSocketMessage } from '../hooks/usewebsocket'
+import Log from '../log'
 import WebSocketContext from '../contexts/websocket'
 
 const Page = styled.main`
@@ -274,6 +276,7 @@ const Form = styled.form`
 const Profile = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
   const { sendMessage, lastMessage } = useContext(WebSocketContext)
+  const { user } = useUser()
 
   useEffect(() => {
     if (lastMessage) {
@@ -281,30 +284,41 @@ const Profile = () => {
     }
   }, [lastMessage])
 
-  const handleFormSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault()
-    const form = e.target as any
+  const handleFormSubmit: React.FormEventHandler<HTMLFormElement> = useCallback(
+    (e) => {
+      e.preventDefault()
+      const form = e.target as any
 
-    const formData = new FormData(form)
-    const message = formData.get('message') as string
+      const formData = new FormData(form)
+      const message = formData.get('message') as string
 
-    sendMessage({
-      action: '@@MESSAGES/SEND',
-      payload: {
-        receiverId: 'ee8886dc-d78b-4c0a-9650-3c19f6661de7',
-        message,
-      },
-      metadata: {
-        authorId: 'ee8886dc-d78b-4c0a-9650-3c19f6661de7',
-      },
-      id: window.crypto.randomUUID(),
-    })
+      if (user) {
+        sendMessage({
+          action: '@@MESSAGES/SEND',
+          payload: {
+            receiverId: user.id,
+            message,
+          },
+          metadata: {
+            authorId: user.id,
+          },
+          id: window.crypto.randomUUID(),
+        })
+      }
 
-    form.reset()
-  }
+      form.reset()
+    },
+    [user],
+  )
+
   const displayMessages = messages.filter(
     ({ action }) => !action.includes('@@INTERNAL'),
   )
+
+  if (!user) {
+    Log.warn("We should have a user here but we don't!")
+  }
+
   return (
     <Page>
       <Typography variant="h2">Messages</Typography>
@@ -349,7 +363,9 @@ const Profile = () => {
       <Form onSubmit={handleFormSubmit}>
         <TextField label="Message" name="message" multiline />
 
-        <Button type="submit">Send</Button>
+        <Button type="submit" disabled={!user}>
+          Send
+        </Button>
         <Button type="reset">Clear</Button>
       </Form>
     </Page>

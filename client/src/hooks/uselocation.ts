@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import Log from '../log'
 
 export interface DefaultLocation {
   lat: number

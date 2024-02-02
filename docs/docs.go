@@ -96,6 +96,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/external-id/{externalid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerToken": []
+                    }
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Returns the Goact User based on their external ID",
+                "operationId": "GetUserByExternalId",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_User"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/weather": {
             "get": {
                 "security": [
@@ -380,6 +411,17 @@ const docTemplate = `{
                 }
             }
         },
+        "data.User": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "externalid": {
+                    "type": "string"
+                }
+            }
+        },
         "data.WeatherCondition": {
             "type": "object",
             "properties": {
@@ -503,6 +545,25 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/data.ForecastQueryUpstreamResponse"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-data_User": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data.User"
                 },
                 "includes": {
                     "type": "array",

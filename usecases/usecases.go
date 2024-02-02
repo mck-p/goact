@@ -86,6 +86,23 @@ func (usecases *UseCase) ProcessUserCreatedWebhook(webhook data.AuthEvent[data.U
 	return nil
 }
 
+type GetUserByExternalIdRequest struct {
+	Repository *data.UserData
+	ExternalId string
+}
+
+type GetUserByExternalIdResponse struct {
+	User *data.User `json:"user"`
+}
+
+func (usecases *UseCase) GetUserByExternalId(req GetUserByExternalIdRequest) (*GetUserByExternalIdResponse, error) {
+	value, err := req.Repository.GetUserByExternalId(req.ExternalId)
+
+	return &GetUserByExternalIdResponse{
+		User: value,
+	}, err
+}
+
 type AuthWebhookCmd struct {
 	CTX     context.Context
 	Webhook map[string]interface{}
