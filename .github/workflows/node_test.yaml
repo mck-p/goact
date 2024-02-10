@@ -46,6 +46,8 @@ jobs:
           working-directory: client
           # tell to the action to not attach comment.
           output: report-markdown
+          # use cache installed above
+          skip-step: install
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
           # pass output from the previous step by id.
