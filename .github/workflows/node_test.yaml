@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - uses: jwalton/gh-find-current-pr@v1
-          id: findPr
+        id: findPr
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
