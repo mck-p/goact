@@ -27,3 +27,21 @@ export const getMessageGroupsForUser = async (
 
   return result.json()
 }
+
+export const createMessageGroup = async (
+  name: string,
+  token: string,
+): Promise<MessageGroup> => {
+  const result = await fetch(`${MESSAGES_BASE_URL}/groups`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name,
+    }),
+  })
+
+  return result.json()
+}

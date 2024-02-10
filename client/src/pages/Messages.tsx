@@ -15,6 +15,7 @@ import { WebSocketMessage } from '../hooks/usewebsocket'
 import Log from '../log'
 import WebSocketContext from '../contexts/websocket'
 import {
+  createMessageGroup,
   getMessageForGroup,
   getMessageGroupsForUser,
 } from '../services/messages'
@@ -294,7 +295,7 @@ const uniqueById = <T extends { id: string }>(arr: T[]): T[] =>
     R.collect((_, v) => v),
   )
 
-const Profile = () => {
+const Messages = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
   const [groups, setGroups] = useState<MessageGroup[]>([])
   const [selectedGroup, setSelectedGroup] = useState<MessageGroup>()
@@ -308,9 +309,13 @@ const Profile = () => {
       const token = await session?.getToken()
 
       if (token) {
-        const result = await getMessageGroupsForUser(token)
+        try {
+          const result = await getMessageGroupsForUser(token)
 
-        setGroups(result)
+          setGroups(result)
+        } catch (err) {
+          Log.warn({ err }, 'Error getting message groups')
+        }
       }
     }
 
@@ -330,36 +335,38 @@ const Profile = () => {
       const token = await session?.getToken()
 
       if (token && selectedGroup?._id) {
-        const result = await getMessageForGroup(selectedGroup?._id, token)
+        try {
+          const result = await getMessageForGroup(selectedGroup?._id, token)
 
-        const mapped: WebSocketMessage[] = result.map((dbMessages) => ({
-          action: '@@MESSAGE/RECEIVE',
-          payload: {
-            message: dbMessages.message,
-            receiverId: dbMessages.group_id,
-          },
-          metadata: {
-            authorId: dbMessages.author_id,
-            receivedAt: dbMessages.created_at,
-          },
-          id: dbMessages._id,
-        }))
+          const mapped: WebSocketMessage[] = result.map((dbMessages) => ({
+            action: '@@MESSAGE/RECEIVE',
+            payload: {
+              message: dbMessages.message,
+              receiverId: dbMessages.group_id,
+            },
+            metadata: {
+              authorId: dbMessages.author_id,
+              receivedAt: dbMessages.created_at,
+            },
+            id: dbMessages._id,
+          }))
 
-        setMessages((msg) => {
-          const unique = uniqueById([...mapped, ...msg])
+          setMessages(() => {
+            return mapped.sort((a, b) => {
+              if (a.metadata.receivedAt > b.metadata.receivedAt) {
+                return 1
+              }
 
-          return unique.sort((a, b) => {
-            if (a.metadata.receivedAt > b.metadata.receivedAt) {
-              return 1
-            }
+              if (a.metadata.receivedAt < b.metadata.receivedAt) {
+                return -1
+              }
 
-            if (a.metadata.receivedAt < b.metadata.receivedAt) {
-              return -1
-            }
-
-            return 0
+              return 0
+            })
           })
-        })
+        } catch (err) {
+          Log.warn({ err }, 'Error when trying to get messages')
+        }
       } else {
         setMessages([])
       }
@@ -379,24 +386,51 @@ const Profile = () => {
       const message = formData.get('message') as string
 
       if (user && selectedGroup?._id) {
-        sendMessage({
-          action: '@@MESSAGES/SAVE',
-          payload: {
-            // TODO: get group ID from state
-            // this is hardcoded
-            groupId: selectedGroup?._id,
-            message,
-          },
-          metadata: {
-            authorId: user.id,
-          },
-          id: window.crypto.randomUUID(),
-        })
+        try {
+          sendMessage({
+            action: '@@MESSAGES/SAVE',
+            payload: {
+              groupId: selectedGroup?._id,
+              message,
+            },
+            metadata: {
+              authorId: user.id,
+            },
+            id: window.crypto.randomUUID(),
+          })
+        } catch (err) {
+          Log.warn({ err }, 'Error sending new message')
+        }
       }
 
       form.reset()
     },
     [user, selectedGroup],
+  )
+
+  const createNewGroup = useCallback(
+    async (e: any) => {
+      e.preventDefault()
+      if (session) {
+        const token = await session.getToken()
+
+        if (token) {
+          try {
+            const formData = new FormData(e.target)
+            const name = formData.get('name') as string
+
+            const messageGroup = await createMessageGroup(name, token)
+            setGroups((old) => [...old, messageGroup])
+            setSelectedGroup(messageGroup)
+          } catch (err) {
+            Log.warn({ err }, 'Error when trying to create a message group')
+          } finally {
+            e.target.reset()
+          }
+        }
+      }
+    },
+    [session],
   )
 
   const displayMessages = messages.filter(
@@ -410,22 +444,30 @@ const Profile = () => {
   return (
     <Page>
       <Typography variant="h2">Messages</Typography>
-      <select
-        onChange={(event) => {
-          const value = event.target.value
+      <div>
+        <div>
+          <h2>Groups</h2>
+          <select
+            value={selectedGroup?._id}
+            onChange={(event) => {
+              const value = event.target.value
 
-          setSelectedGroup({
-            _id: value,
-          })
-        }}
-      >
-        <option value="">Select Group</option>
-        {groups.map((group) => (
-          <option key={group._id} value={group._id}>
-            {group._id}
-          </option>
-        ))}
-      </select>
+              setSelectedGroup(groups.find(({ _id }) => _id === value))
+            }}
+          >
+            <option value="">Select Group</option>
+            {groups.map((group) => (
+              <option key={group._id} value={group._id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <form onSubmit={createNewGroup}>
+          <input type="text" name="name" placeholder="My New Group" required />
+          <button type="submit">Create New Group</button>
+        </form>
+      </div>
       <MessageList>
         {displayMessages.map((message, i) => (
           <MessageWrap key={message.id}>
@@ -476,4 +518,4 @@ const Profile = () => {
   )
 }
 
-export default Profile
+export default Messages

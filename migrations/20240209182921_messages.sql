@@ -10,6 +10,8 @@
 -- +goose Up
 CREATE TABLE message_groups(
     _id UUID NOT NULL DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (_id)
 );
 

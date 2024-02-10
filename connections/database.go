@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -46,4 +47,8 @@ func (database *DatabaseConnection) QueryRow(sql string, params ...any) pgx.Row 
 
 func (database *DatabaseConnection) Query(sql string, params ...any) (pgx.Rows, error) {
 	return database.conn.Query(context.TODO(), sql, params...)
+}
+
+func (database *DatabaseConnection) Exec(sql string, params ...any) (pgconn.CommandTag, error) {
+	return database.conn.Exec(context.TODO(), sql, params...)
 }

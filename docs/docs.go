@@ -73,6 +73,39 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "This will create a new Message Group and assign the creator as the only authorized user of that message group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Creates a new Message Group",
+                "operationId": "CreateMessageGroup",
+                "parameters": [
+                    {
+                        "description": "Message Group Information",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.MessageGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_MessageGroup"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/messages/groups/{:id}": {
@@ -455,6 +488,20 @@ const docTemplate = `{
                 }
             }
         },
+        "data.MessageGroup": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "data.User": {
             "type": "object",
             "properties": {
@@ -576,6 +623,14 @@ const docTemplate = `{
                 }
             }
         },
+        "server.MessageGroupRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "server.SuccessResponse-any": {
             "type": "object",
             "properties": {
@@ -598,6 +653,25 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/data.ForecastQueryUpstreamResponse"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-data_MessageGroup": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data.MessageGroup"
                 },
                 "includes": {
                     "type": "array",

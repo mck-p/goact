@@ -141,6 +141,15 @@ definitions:
       windchill_f:
         type: number
     type: object
+  data.MessageGroup:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      name:
+        type: string
+    type: object
   data.User:
     properties:
       _id:
@@ -221,6 +230,11 @@ definitions:
       title:
         type: string
     type: object
+  server.MessageGroupRequest:
+    properties:
+      name:
+        type: string
+    type: object
   server.SuccessResponse-any:
     properties:
       data: {}
@@ -237,6 +251,19 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/data.ForecastQueryUpstreamResponse'
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-data_MessageGroup:
+    properties:
+      data:
+        $ref: '#/definitions/data.MessageGroup'
       includes:
         items: {}
         type: array
@@ -343,6 +370,29 @@ paths:
           schema:
             $ref: '#/definitions/server.ErrorResponse-server_GenericError'
       summary: Retrieves the Message Groups that a User has access to
+      tags:
+      - Messages
+    post:
+      consumes:
+      - application/json
+      description: This will create a new Message Group and assign the creator as
+        the only authorized user of that message group
+      operationId: CreateMessageGroup
+      parameters:
+      - description: Message Group Information
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/server.MessageGroupRequest'
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_MessageGroup'
+      summary: Creates a new Message Group
       tags:
       - Messages
   /api/v1/messages/groups/{:id}:

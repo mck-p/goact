@@ -329,6 +329,47 @@ func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
 	return JSONAPI(c, 200, groups)
 }
 
+type MessageGroupRequest struct {
+	Name string `json:"name"`
+}
+
+// @Id CreateMessageGroup
+// @Summary Creates a new Message Group
+// @Description This will create a new Message Group and assign the creator as the only authorized user of that message group
+// @Tags Messages
+// @Accept json
+//
+//	@Produce	application/vnd.api+json
+//
+// @Param requestBody body MessageGroupRequest true "Message Group Information"
+//
+// @Success 200 {object} SuccessResponse[data.MessageGroup]
+// @Router /api/v1/messages/groups [post]
+func (handlers *Handler) CreateMessageGroup(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateMessageGroup")
+	defer span.End()
+
+	user := c.Locals("user").(*data.User)
+
+	payload := MessageGroupRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := data.Messages.CreateGroup(data.CreateGroupCmd{
+		UserId:    user.Id,
+		GroupName: payload.Name,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, result)
+}
+
 type WebsocketMessage struct {
 	Id       string            `json:"id"`
 	Action   string            `json:"action"`

@@ -9,4 +9,5 @@ export interface Message {
 
 export interface MessageGroup {
   _id: string
+  name: string
 }

@@ -72,4 +72,9 @@ var routes = []Route{
 		Path:     "/api/v1/messages/groups",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetGroups},
 	},
+	{
+		Method:   "post",
+		Path:     "/api/v1/messages/groups",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateMessageGroup},
+	},
 }

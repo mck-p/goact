@@ -1,11 +1,11 @@
 package data
 
 import (
-	"log/slog"
 	"mck-p/goact/connections"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type Message struct {
@@ -18,7 +18,9 @@ type Message struct {
 }
 
 type MessageGroup struct {
-	Id string `json:"_id"`
+	Id        string    `json:"_id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type IMessages struct{}
@@ -84,8 +86,6 @@ func (messages *IMessages) GetMessagesForGroup(query MessageGroupQuery) ([]*Mess
 		query.OrderBy = "DESC"
 	}
 
-	slog.Debug("Selecting messages", slog.Any("query", query))
-
 	rows, err := connections.Database.Query(sql, query.GroupId, query.Limit, query.Offset)
 
 	if err != nil {
@@ -104,14 +104,40 @@ func (messages *IMessages) GetMessagesForGroup(query MessageGroupQuery) ([]*Mess
 	return list, nil
 }
 
+type CreateGroupCmd struct {
+	UserId    string
+	GroupName string
+}
+
+func (messages *IMessages) CreateGroup(cmd CreateGroupCmd) (*MessageGroup, error) {
+	messageGroup := MessageGroup{}
+	sql := `
+		INSERT INTO message_groups(name) VALUES($1) RETURNING _id as id, name, created_at as createdAt;
+	`
+
+	row := connections.Database.QueryRow(sql, cmd.GroupName)
+
+	row.Scan(&messageGroup.Id, &messageGroup.Name, &messageGroup.CreatedAt)
+
+	sql = `
+		INSERT INTO message_group_members(group_id, user_id) VALUES ($1, $2)
+	`
+
+	_, err := connections.Database.Exec(sql, messageGroup.Id, cmd.UserId)
+
+	return &messageGroup, err
+}
+
 type UserGroupsQuery struct {
 	UserId string
 }
 
-func (messages *IMessages) GetUserGroups(query UserGroupsQuery) ([]*MessageGroup, error) {
+func (messages *IMessages) GetUserGroups(query UserGroupsQuery) ([]MessageGroup, error) {
 	sql := `
 		SELECT
-			message_groups._id as id
+			message_groups._id as id,
+			message_groups.name as name,
+			message_groups.created_at as created_at
 		FROM
 			message_groups
 		JOIN
@@ -124,16 +150,13 @@ func (messages *IMessages) GetUserGroups(query UserGroupsQuery) ([]*MessageGroup
 	rows, err := connections.Database.Query(sql, query.UserId)
 
 	if err != nil {
-		return []*MessageGroup{}, err
+		return []MessageGroup{}, err
 	}
 
-	list := []*MessageGroup{}
+	list, err := pgx.CollectRows(rows, pgx.RowToStructByName[MessageGroup])
 
-	for rows.Next() {
-		var group MessageGroup
-
-		rows.Scan(&group.Id)
-		list = append(list, &group)
+	if err != nil {
+		return []MessageGroup{}, err
 	}
 
 	return list, nil
