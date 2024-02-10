@@ -3,6 +3,7 @@ package connections
 import (
 	"context"
 	"log/slog"
+	"mck-p/goact/tracer"
 	"os"
 
 	"github.com/jackc/pgx/v5"
@@ -15,7 +16,10 @@ type DatabaseConnection struct {
 
 var Database = &DatabaseConnection{}
 
-func (database *DatabaseConnection) Connect() error {
+func (database *DatabaseConnection) Connect(ctx context.Context) error {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Database::Connect")
+	defer span.End()
+
 	slog.Debug("We are connecting to the Database connection")
 
 	connection, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
@@ -29,7 +33,10 @@ func (database *DatabaseConnection) Connect() error {
 	return nil
 }
 
-func (database *DatabaseConnection) Disconnect() {
+func (database *DatabaseConnection) Disconnect(ctx context.Context) {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Database::Disconnect")
+	defer span.End()
+
 	database.conn.Close()
 }
 

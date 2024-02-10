@@ -4,7 +4,17 @@
 .PHONY: build build-client build-server \
 		dev dev-client dev-server \
 		setup setup-client setup-server \
-		format format-server format-client
+		format format-server format-client \
+		check-migrations migrate-up migrate-down
+
+migrate-down:
+	./scripts/rollback-database.sh
+
+migrate-up:
+	./scripts/migrate-database.sh
+	
+check-migrations:
+	./scripts/check-migrations.sh
 
 format-server:
 	go fmt ./...

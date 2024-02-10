@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"mck-p/goact/commands"
+	"mck-p/goact/tracer"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -22,13 +23,20 @@ type ISubscriptions struct {
 
 var Subscriptions = &ISubscriptions{}
 
-func (subscriptions *ISubscriptions) Connect() {
+func (subscriptions *ISubscriptions) Connect(ctx context.Context) {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Subscriptions::Connect")
+	defer span.End()
+
 	slog.Debug("We are connecting to the Subscriptions connection")
+
 	subscriptions.hasSubscribed = true
 	subscriptions.currentSubscriptions = map[string]Subscription{}
 }
 
-func (subscriptions *ISubscriptions) Disconnect() {
+func (subscriptions *ISubscriptions) Disconnect(ctx context.Context) {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Subscriptions::Disconnect")
+	defer span.End()
+
 	slog.Debug(("Disconnecting from the Subscriptions connection"))
 
 	for key, subscription := range subscriptions.currentSubscriptions {

@@ -33,6 +33,15 @@ func (server *Server) Start(port int) error {
 	return nil
 }
 
+func (server *Server) Stop() error {
+	if server.app == nil {
+		slog.Debug("Requested to stop a non-started server.")
+		return nil
+	}
+
+	return server.app.Shutdown()
+}
+
 func JSONAPI(c *fiber.Ctx, status int, data interface{}) error {
 	c.Set("Content-Type", "application/vnd.api+json")
 	c.Status(status)
