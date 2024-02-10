@@ -55,4 +55,4 @@ jobs:
         with:
           # pass output from the previous step by id.
           message: ${{ steps.coverage.outputs.report }}
-          prnumber: ${{ steps.findPr.outputs.number }}
+          number: ${{ steps.findPr.outputs.number }}
