@@ -4,11 +4,10 @@
   "description": "The Web Client for the Christ Like application",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "dev": "webpack serve",
     "build": "ENVIRONMENT=prod webpack",
-    "fmt": "prettier --write .",
-    "create-api-schema": "npx @manifoldco/swagger-to-ts http://localhost:8080/docs/doc.json -o src/services/api.schema.ts"
+    "fmt": "prettier --write ."
   },
   "keywords": [],
   "author": "Tim Roberts <tim@mck-p.com>",
@@ -22,7 +21,6 @@
     "@clerk/themes": "^1.7.9",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
-    "@manifoldco/swagger-to-ts": "^2.1.0",
     "@mui/icons-material": "^5.15.5",
     "@mui/material": "^5.15.5",
     "@reduxjs/toolkit": "^2.0.1",

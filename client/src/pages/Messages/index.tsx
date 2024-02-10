@@ -10,19 +10,19 @@ import styled from '@emotion/styled'
 import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 
-import { useUser } from '../hooks/useuser'
-import { WebSocketMessage } from '../hooks/usewebsocket'
-import Log from '../log'
-import WebSocketContext from '../contexts/websocket'
+import { useUser } from '../../hooks/useuser'
+import { WebSocketMessage } from '../../hooks/usewebsocket'
+import Log from '../../log'
+import WebSocketContext from '../../contexts/websocket'
 import {
   createMessageGroup,
   getMessageForGroup,
   getMessageGroupsForUser,
-} from '../services/messages'
+} from '../../services/messages'
 import { useSession } from '@clerk/clerk-react'
 import { pipe } from 'fp-ts/lib/function'
-import { MessageGroup } from '../services/messages.schema'
-import { P } from 'pino'
+import { MessageGroup } from '../../services/messages.schema'
+import { mapDatabaseToWebsocket, sortMessages } from './utils'
 
 const Page = styled.main`
   padding: 1rem;
@@ -285,16 +285,6 @@ const Form = styled.form`
   }
 `
 
-const uniqueById = <T extends { id: string }>(arr: T[]): T[] =>
-  pipe(
-    arr,
-    A.reduce(R.empty as Record<string, T>, (acc, obj) => ({
-      ...acc,
-      [obj.id]: obj,
-    })),
-    R.collect((_, v) => v),
-  )
-
 const Messages = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
   const [groups, setGroups] = useState<MessageGroup[]>([])
@@ -338,31 +328,10 @@ const Messages = () => {
         try {
           const result = await getMessageForGroup(selectedGroup?._id, token)
 
-          const mapped: WebSocketMessage[] = result.map((dbMessages) => ({
-            action: '@@MESSAGE/RECEIVE',
-            payload: {
-              message: dbMessages.message,
-              receiverId: dbMessages.group_id,
-            },
-            metadata: {
-              authorId: dbMessages.author_id,
-              receivedAt: dbMessages.created_at,
-            },
-            id: dbMessages._id,
-          }))
+          const mapped: WebSocketMessage[] = result.map(mapDatabaseToWebsocket)
 
           setMessages(() => {
-            return mapped.sort((a, b) => {
-              if (a.metadata.receivedAt > b.metadata.receivedAt) {
-                return 1
-              }
-
-              if (a.metadata.receivedAt < b.metadata.receivedAt) {
-                return -1
-              }
-
-              return 0
-            })
+            return mapped.sort(sortMessages)
           })
         } catch (err) {
           Log.warn({ err }, 'Error when trying to get messages')
