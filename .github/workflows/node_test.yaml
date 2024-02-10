@@ -11,8 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Collect Coverage
-        uses: ArtiomTr/jest-coverage-report-action@v2
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -24,6 +22,9 @@ jobs:
         with:
           version: 8
           run_install: false
+
+      - name: Collect Coverage
+        uses: ArtiomTr/jest-coverage-report-action@v2
 
       - name: Get pnpm store directory
         shell: bash
