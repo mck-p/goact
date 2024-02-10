@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"mck-p/goact/authorization"
 	"mck-p/goact/commands"
 	"mck-p/goact/data"
 	"mck-p/goact/tracer"
@@ -255,6 +256,20 @@ func (handlers *Handler) Webhook(c *fiber.Ctx) error {
 func (handlers *Handler) GetGroupMessages(c *fiber.Ctx) error {
 	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetGroupMessages")
 	defer span.End()
+	groupId := c.Params("id")
+	user := c.Locals("user").(*data.User)
+
+	canGetGroupMessages := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("group::%s", groupId),
+		"getMembers",
+	)
+
+	if !canGetGroupMessages {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
 
 	limit := c.QueryInt("limit")
 
@@ -271,7 +286,7 @@ func (handlers *Handler) GetGroupMessages(c *fiber.Ctx) error {
 	}
 
 	messages, err := data.Messages.GetMessagesForGroup(data.MessageGroupQuery{
-		GroupId: c.Params("id"),
+		GroupId: groupId,
 		Offset:  offset,
 		Limit:   limit,
 		OrderBy: orderBy,

@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"mck-p/goact/authorization"
 	"mck-p/goact/commands"
 	"mck-p/goact/connections"
 	"mck-p/goact/data"
 	"mck-p/goact/tracer"
 	"sync"
+
+	"github.com/mdobak/go-xerrors"
 )
 
 const (
@@ -52,6 +55,16 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 			},
 		})
 	case SendMessage:
+		canSendMessageToGroup := authorization.CanPerformAction(
+			cmd.ActorId,
+			fmt.Sprintf("group::%s", cmd.Payload["receiverId"].(string)),
+			"send",
+		)
+
+		if !canSendMessageToGroup {
+			return xerrors.New("%s does not have permissions to send message to group %s", cmd.ActorId, cmd.Payload["receiverId"].(string))
+		}
+
 		err := connections.Cache.Publish(commands.PublishCmd{
 			CTX:   cmd.CTX,
 			Topic: MessageToTopic(cmd.Payload["receiverId"].(string)),
@@ -69,11 +82,21 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 			return err
 		}
 	case SaveMessage:
-		slog.Debug("Trying to handle Save MEssage", slog.Any("payload", cmd.Payload), slog.Any("actor", cmd.ActorId))
+		canSaveMessageToGroup := authorization.CanPerformAction(
+			cmd.ActorId,
+			fmt.Sprintf("group::%s", cmd.Payload["groupId"].(string)),
+			"save",
+		)
+
+		if !canSaveMessageToGroup {
+			return xerrors.New("%s does not have permissions to save message to group %s", cmd.ActorId, cmd.Payload["groupId"].(string))
+		}
+
 		msg, err := data.Messages.SaveMessage(data.NewMessage{
 			AuthorId: cmd.ActorId,
 			Message:  cmd.Payload["message"].(string),
 			GroupId:  cmd.Payload["groupId"].(string),
+			Id:       cmd.Id,
 		})
 
 		if err != nil {

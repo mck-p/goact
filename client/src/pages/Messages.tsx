@@ -3,6 +3,9 @@ import { Button, Divider, Paper, TextField, Typography } from '@mui/material'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { formatDistanceToNow } from 'date-fns'
+import { uniq } from 'fp-ts/Array'
+import * as A from 'fp-ts/lib/Array'
+import * as R from 'fp-ts/lib/Record'
 import styled from '@emotion/styled'
 import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -13,6 +16,7 @@ import Log from '../log'
 import WebSocketContext from '../contexts/websocket'
 import { getMessageForGroup } from '../services/messages'
 import { useSession } from '@clerk/clerk-react'
+import { pipe } from 'fp-ts/lib/function'
 
 const Page = styled.main`
   padding: 1rem;
@@ -275,6 +279,16 @@ const Form = styled.form`
   }
 `
 
+const uniqueById = <T extends { id: string }>(arr: T[]): T[] =>
+  pipe(
+    arr,
+    A.reduce(R.empty as Record<string, T>, (acc, obj) => ({
+      ...acc,
+      [obj.id]: obj,
+    })),
+    R.collect((_, v) => v),
+  )
+
 const Profile = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
   const { sendMessage, lastMessage } = useContext(WebSocketContext)
@@ -294,6 +308,7 @@ const Profile = () => {
 
       if (token) {
         const result = await getMessageForGroup(groupId, token)
+
         const mapped: WebSocketMessage[] = result.map((dbMessages) => ({
           action: '@@MESSAGE/RECEIVE',
           payload: {
@@ -307,7 +322,9 @@ const Profile = () => {
           id: dbMessages._id,
         }))
 
-        setMessages((msg) => [...mapped, ...msg])
+        setMessages((msg) => {
+          return uniqueById([...mapped, ...msg])
+        })
       }
     }
 

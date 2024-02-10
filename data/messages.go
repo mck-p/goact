@@ -25,6 +25,7 @@ type NewMessage struct {
 	Message  string
 	AuthorId string
 	GroupId  string
+	Id       string
 }
 
 func (messages *IMessages) SaveMessage(msg NewMessage) (*Message, error) {
@@ -32,9 +33,9 @@ func (messages *IMessages) SaveMessage(msg NewMessage) (*Message, error) {
 
 	sql := `
 		INSERT INTO messages(
-			message, author_id, group_id
+			message, author_id, group_id, _id
 		) VALUES (
-			$1, $2, $3
+			$1, $2, $3, $4
 		) RETURNING
 			_id as id,
 			author_id as authorId,
@@ -42,7 +43,7 @@ func (messages *IMessages) SaveMessage(msg NewMessage) (*Message, error) {
 			created_at as createdAt;
 	`
 
-	row := connections.Database.QueryRow(sql, msg.Message, msg.AuthorId, msg.GroupId)
+	row := connections.Database.QueryRow(sql, msg.Message, msg.AuthorId, msg.GroupId, msg.Id)
 
 	return &message, row.Scan(&message.Id, &message.AuthorId, &message.GroupId, &message.CreatedAt)
 }
