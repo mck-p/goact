@@ -3,14 +3,26 @@ import { Button, Divider, Paper, TextField, Typography } from '@mui/material'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { formatDistanceToNow } from 'date-fns'
+import { uniq } from 'fp-ts/Array'
+import * as A from 'fp-ts/lib/Array'
+import * as R from 'fp-ts/lib/Record'
 import styled from '@emotion/styled'
 import { a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 
-import { useUser } from '../hooks/useuser'
-import { WebSocketMessage } from '../hooks/usewebsocket'
-import Log from '../log'
-import WebSocketContext from '../contexts/websocket'
+import { useUser } from '../../hooks/useuser'
+import { WebSocketMessage } from '../../hooks/usewebsocket'
+import Log from '../../log'
+import WebSocketContext from '../../contexts/websocket'
+import {
+  createMessageGroup,
+  getMessageForGroup,
+  getMessageGroupsForUser,
+} from '../../services/messages'
+import { useSession } from '@clerk/clerk-react'
+import { pipe } from 'fp-ts/lib/function'
+import { MessageGroup } from '../../services/messages.schema'
+import { mapDatabaseToWebsocket, sortMessages } from './utils'
 
 const Page = styled.main`
   padding: 1rem;
@@ -273,16 +285,66 @@ const Form = styled.form`
   }
 `
 
-const Profile = () => {
+const Messages = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
+  const [groups, setGroups] = useState<MessageGroup[]>([])
+  const [selectedGroup, setSelectedGroup] = useState<MessageGroup>()
+
   const { sendMessage, lastMessage } = useContext(WebSocketContext)
   const { user } = useUser()
+  const { session } = useSession()
+
+  useEffect(() => {
+    const getGroups = async () => {
+      const token = await session?.getToken()
+
+      if (token) {
+        try {
+          const result = await getMessageGroupsForUser(token)
+
+          setGroups(result)
+        } catch (err) {
+          Log.warn({ err }, 'Error getting message groups')
+        }
+      }
+    }
+
+    if (session) {
+      getGroups()
+    }
+  }, [session])
 
   useEffect(() => {
     if (lastMessage) {
       setMessages((msgs) => [...msgs, lastMessage])
     }
   }, [lastMessage])
+
+  useEffect(() => {
+    const getPastMessages = async () => {
+      const token = await session?.getToken()
+
+      if (token && selectedGroup?._id) {
+        try {
+          const result = await getMessageForGroup(selectedGroup?._id, token)
+
+          const mapped: WebSocketMessage[] = result.map(mapDatabaseToWebsocket)
+
+          setMessages(() => {
+            return mapped.sort(sortMessages)
+          })
+        } catch (err) {
+          Log.warn({ err }, 'Error when trying to get messages')
+        }
+      } else {
+        setMessages([])
+      }
+    }
+
+    if (session && user) {
+      getPastMessages()
+    }
+  }, [user, setMessages, selectedGroup?._id, session])
 
   const handleFormSubmit: React.FormEventHandler<HTMLFormElement> = useCallback(
     (e) => {
@@ -292,23 +354,52 @@ const Profile = () => {
       const formData = new FormData(form)
       const message = formData.get('message') as string
 
-      if (user) {
-        sendMessage({
-          action: '@@MESSAGES/SEND',
-          payload: {
-            receiverId: user.id,
-            message,
-          },
-          metadata: {
-            authorId: user.id,
-          },
-          id: window.crypto.randomUUID(),
-        })
+      if (user && selectedGroup?._id) {
+        try {
+          sendMessage({
+            action: '@@MESSAGES/SAVE',
+            payload: {
+              groupId: selectedGroup?._id,
+              message,
+            },
+            metadata: {
+              authorId: user.id,
+            },
+            id: window.crypto.randomUUID(),
+          })
+        } catch (err) {
+          Log.warn({ err }, 'Error sending new message')
+        }
       }
 
       form.reset()
     },
-    [user],
+    [user, selectedGroup],
+  )
+
+  const createNewGroup = useCallback(
+    async (e: any) => {
+      e.preventDefault()
+      if (session) {
+        const token = await session.getToken()
+
+        if (token) {
+          try {
+            const formData = new FormData(e.target)
+            const name = formData.get('name') as string
+
+            const messageGroup = await createMessageGroup(name, token)
+            setGroups((old) => [...old, messageGroup])
+            setSelectedGroup(messageGroup)
+          } catch (err) {
+            Log.warn({ err }, 'Error when trying to create a message group')
+          } finally {
+            e.target.reset()
+          }
+        }
+      }
+    },
+    [session],
   )
 
   const displayMessages = messages.filter(
@@ -322,6 +413,30 @@ const Profile = () => {
   return (
     <Page>
       <Typography variant="h2">Messages</Typography>
+      <div>
+        <div>
+          <h2>Groups</h2>
+          <select
+            value={selectedGroup?._id}
+            onChange={(event) => {
+              const value = event.target.value
+
+              setSelectedGroup(groups.find(({ _id }) => _id === value))
+            }}
+          >
+            <option value="">Select Group</option>
+            {groups.map((group) => (
+              <option key={group._id} value={group._id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <form onSubmit={createNewGroup}>
+          <input type="text" name="name" placeholder="My New Group" required />
+          <button type="submit">Create New Group</button>
+        </form>
+      </div>
       <MessageList>
         {displayMessages.map((message, i) => (
           <MessageWrap key={message.id}>
@@ -372,4 +487,4 @@ const Profile = () => {
   )
 }
 
-export default Profile
+export default Messages

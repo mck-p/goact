@@ -62,4 +62,19 @@ var routes = []Route{
 		Path:     "/api/v1/users/external-id/:externalid",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetUserByExternalId},
 	},
+	{
+		Method:   "get",
+		Path:     "/api/v1/messages/groups/:id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetGroupMessages},
+	},
+	{
+		Method:   "get",
+		Path:     "/api/v1/messages/groups",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetGroups},
+	},
+	{
+		Method:   "post",
+		Path:     "/api/v1/messages/groups",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateMessageGroup},
+	},
 }

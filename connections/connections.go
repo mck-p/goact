@@ -10,11 +10,30 @@ type Connection struct{}
 
 var Connections = &Connection{}
 
-func (connections *Connection) Connect() {
+func (connections *Connection) Connect(ctx context.Context) {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Connect")
+	defer span.End()
+
 	slog.Debug("Connections connecting")
-	Cache.Connect()
-	Database.Connect()
-	Subscriptions.Connect()
+
+	Cache.Connect(ctx)
+	Database.Connect(ctx)
+	Subscriptions.Connect(ctx)
+
+	slog.Debug("Connections connected")
+}
+
+func (connections *Connection) Disconnect(ctx context.Context) {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Disconnect")
+	defer span.End()
+
+	slog.Debug("Connections disconnecting")
+
+	Subscriptions.Disconnect(ctx)
+	Database.Disconnect(ctx)
+	Cache.Disconnect(ctx)
+
+	slog.Debug("Connections disconnected")
 }
 
 func (connections *Connection) Healthy(ctx context.Context) (bool, error) {

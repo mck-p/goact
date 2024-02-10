@@ -40,6 +40,16 @@ func (m *Middleware) BearerAuthentication() fiber.Handler {
 		// 			use the claims
 		c.Locals("claims", claims)
 
+		user, err := data.Users.GetUserByExternalId(claims.Subject)
+
+		if err != nil {
+			slog.Warn("Error trying to get user by externalId", slog.Any("error", err), slog.String("externalId", claims.Subject))
+
+			return fiber.ErrForbidden
+		}
+
+		c.Locals("user", user)
+
 		return c.Next()
 	}
 }
@@ -51,12 +61,12 @@ func (m *Middleware) BearerAuthentication() fiber.Handler {
 */
 func (m *Middleware) OnlyAuthenticated() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		possibleClaims := c.Locals("claims")
+		possibleUser := c.Locals("user")
 
 		// Claims is empty so we can assume we
 		// either failed to parse or they did
 		// not give us anything to parse
-		if possibleClaims == nil {
+		if possibleUser == nil {
 			// We do not have a claims locally
 			// so we need to fail
 			return JSONAPI(c, 401, ErrorResponse[GenericError]{

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"mck-p/goact/authorization"
 	"mck-p/goact/commands"
 	"mck-p/goact/data"
 	"mck-p/goact/tracer"
@@ -87,6 +88,10 @@ type GetMessageRequest struct{}
 
 type GetMessageResponse struct {
 	Messages []any `json:"messages"`
+}
+
+type GetGroupsResponse struct {
+	Groups []any `json:"groups"`
 }
 
 // GetMessages	godoc
@@ -238,6 +243,133 @@ func (handlers *Handler) Webhook(c *fiber.Ctx) error {
 	})
 }
 
+// GetGroupMessages	godoc
+//
+//		@Id			GetGroupMessages
+//		@Summary	Retrieves the last N number of messages, given some offset
+//		@Tags		Users
+//		@Produce	application/vnd.api+json
+//	 	@Param		id path string true "Group ID"
+//		@Param		limit query int false "Limit for pagination"
+//		@Param		offset query int false "Offset for pagination"
+//		@Param		orderBy query int false "DESC or ASC"
+
+// @Success	200	{object}	SuccessResponse[GetMessageResponse]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups/{:id} [get]
+func (handlers *Handler) GetGroupMessages(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetGroupMessages")
+	defer span.End()
+	groupId := c.Params("id")
+	user := c.Locals("user").(*data.User)
+
+	canGetGroupMessages := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("group::%s", groupId),
+		"getMembers",
+	)
+
+	if !canGetGroupMessages {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	limit := c.QueryInt("limit")
+
+	if limit == 0 {
+		limit = 100
+	}
+
+	offset := c.QueryInt("offset")
+
+	orderBy := c.Query("orderBy")
+
+	if orderBy == "" {
+		orderBy = "DESC"
+	}
+
+	messages, err := data.Messages.GetMessagesForGroup(data.MessageGroupQuery{
+		GroupId: groupId,
+		Offset:  offset,
+		Limit:   limit,
+		OrderBy: orderBy,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, messages)
+}
+
+// GetUserMessageGroups	godoc
+//
+//	@Id			GetUserMessageGroups
+//	@Summary	Retrieves the Message Groups that a User has access to
+//	@Tags		Messages
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[GetGroupsResponse]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups [get]
+func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetGroups")
+	defer span.End()
+	user := c.Locals("user").(*data.User)
+
+	groups, err := data.Messages.GetUserGroups(data.UserGroupsQuery{
+		UserId: user.Id,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, groups)
+}
+
+type MessageGroupRequest struct {
+	Name string `json:"name"`
+}
+
+// @Id CreateMessageGroup
+// @Summary Creates a new Message Group
+// @Description This will create a new Message Group and assign the creator as the only authorized user of that message group
+// @Tags Messages
+// @Accept json
+//
+//	@Produce	application/vnd.api+json
+//
+// @Param requestBody body MessageGroupRequest true "Message Group Information"
+//
+// @Success 200 {object} SuccessResponse[data.MessageGroup]
+// @Router /api/v1/messages/groups [post]
+func (handlers *Handler) CreateMessageGroup(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateMessageGroup")
+	defer span.End()
+
+	user := c.Locals("user").(*data.User)
+
+	payload := MessageGroupRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := data.Messages.CreateGroup(data.CreateGroupCmd{
+		UserId:    user.Id,
+		GroupName: payload.Name,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, result)
+}
+
 type WebsocketMessage struct {
 	Id       string            `json:"id"`
 	Action   string            `json:"action"`
@@ -326,6 +458,7 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 
 	go func(conn *websocket.Conn) {
 		for msg := range messagesForUserChannel {
+			slog.Debug("We got a message for the user on the websocket", slog.String("id", msg.Id))
 			select {
 			case <-quit:
 				slog.Debug("We have been asked to quit the messaging for user channel")

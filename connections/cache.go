@@ -18,12 +18,25 @@ type CacheConnection struct {
 
 var Cache = &CacheConnection{}
 
-func (cache *CacheConnection) Connect() {
+func (cache *CacheConnection) Connect(ctx context.Context) {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Cache::Connect")
+	defer span.End()
+
 	slog.Debug("We are connecting to the Cache connection")
+
 	cache.conn = redis.NewClient(&redis.Options{
 		Addr:     "0.0.0.0:9999",
 		Password: "ou812",
 	})
+}
+
+func (cache *CacheConnection) Disconnect(ctx context.Context) {
+	_, span := tracer.Tracer.Start(ctx, "Connections::Cache::Disconnect")
+	defer span.End()
+
+	slog.Debug("We are disconnecting from the Cache connection")
+
+	cache.conn.Close()
 }
 
 type GetCommand struct {
@@ -106,6 +119,7 @@ func (cache *CacheConnection) Publish(cmd commands.PublishCmd) error {
 		body, err := json.Marshal(cmd.Data)
 
 		if err != nil {
+			slog.Warn("There was an error trying to publish the command", slog.Any("error", err))
 			return err
 		}
 

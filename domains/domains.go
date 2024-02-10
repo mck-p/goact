@@ -40,7 +40,7 @@ func (domains *IDomains) Process(cmd Command) {
 	_, span := tracer.Tracer.Start(cmd.CTX, "Domains::Process")
 	defer span.End()
 
-	slog.Info("Processing command", slog.String("id", cmd.Id))
+	slog.Info("Processing command", slog.String("id", cmd.Id), slog.String("action", cmd.Action))
 
 	if Messages.ShouldHandle(cmd.Action) {
 		wg.Add(1)

@@ -49,6 +49,83 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/messages/groups": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Retrieves the Message Groups that a User has access to",
+                "operationId": "GetUserMessageGroups",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-server_GetGroupsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "This will create a new Message Group and assign the creator as the only authorized user of that message group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Creates a new Message Group",
+                "operationId": "CreateMessageGroup",
+                "parameters": [
+                    {
+                        "description": "Message Group Information",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.MessageGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_MessageGroup"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/messages/groups/{:id}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-server_GetMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/:id/messages": {
             "get": {
                 "produces": [
@@ -411,6 +488,20 @@ const docTemplate = `{
                 }
             }
         },
+        "data.MessageGroup": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "data.User": {
             "type": "object",
             "properties": {
@@ -482,6 +573,15 @@ const docTemplate = `{
                 }
             }
         },
+        "server.GetGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "items": {}
+                }
+            }
+        },
         "server.GetMessageResponse": {
             "type": "object",
             "properties": {
@@ -523,6 +623,14 @@ const docTemplate = `{
                 }
             }
         },
+        "server.MessageGroupRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "server.SuccessResponse-any": {
             "type": "object",
             "properties": {
@@ -559,11 +667,49 @@ const docTemplate = `{
                 "metadata": {}
             }
         },
+        "server.SuccessResponse-data_MessageGroup": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data.MessageGroup"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
         "server.SuccessResponse-data_User": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/data.User"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-server_GetGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/server.GetGroupsResponse"
                 },
                 "includes": {
                     "type": "array",
