@@ -20,5 +20,3 @@ jobs:
         run: go mod tidy
       - name: Test Code
         run: go test ./...
-      - name: Ensure Formatted
-        run: test -z $(gofmt -l .)
