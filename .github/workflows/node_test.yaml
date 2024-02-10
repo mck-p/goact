@@ -37,6 +37,13 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - uses: ArtiomTr/jest-coverage-report-action@v2
+        id: coverage
         with:
           package-manager: pnpm
           working-directory: client
+          # tell to the action to not attach comment.
+          output: report-markdown
+      - uses: marocchino/sticky-pull-request-comment@v2
+          with:
+              # pass output from the previous step by id.
+              message: ${{ steps.coverage.outputs.report }}
