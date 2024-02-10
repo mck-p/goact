@@ -49,6 +49,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/messages/groups": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Retrieves the Message Groups that a User has access to",
+                "operationId": "GetUserMessageGroups",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-server_GetGroupsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/messages/groups/{:id}": {
             "get": {
                 "responses": {
@@ -500,6 +526,15 @@ const docTemplate = `{
                 }
             }
         },
+        "server.GetGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "items": {}
+                }
+            }
+        },
         "server.GetMessageResponse": {
             "type": "object",
             "properties": {
@@ -582,6 +617,25 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/data.User"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-server_GetGroupsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/server.GetGroupsResponse"
                 },
                 "includes": {
                     "type": "array",

@@ -90,6 +90,10 @@ type GetMessageResponse struct {
 	Messages []any `json:"messages"`
 }
 
+type GetGroupsResponse struct {
+	Groups []any `json:"groups"`
+}
+
 // GetMessages	godoc
 //
 //		@Id			GetMessages
@@ -297,6 +301,32 @@ func (handlers *Handler) GetGroupMessages(c *fiber.Ctx) error {
 	}
 
 	return JSONAPI(c, 200, messages)
+}
+
+// GetUserMessageGroups	godoc
+//
+//	@Id			GetUserMessageGroups
+//	@Summary	Retrieves the Message Groups that a User has access to
+//	@Tags		Messages
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[GetGroupsResponse]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups [get]
+func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetGroups")
+	defer span.End()
+	user := c.Locals("user").(*data.User)
+
+	groups, err := data.Messages.GetUserGroups(data.UserGroupsQuery{
+		UserId: user.Id,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, groups)
 }
 
 type WebsocketMessage struct {

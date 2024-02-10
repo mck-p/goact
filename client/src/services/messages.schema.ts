@@ -6,3 +6,7 @@ export interface Message {
   group_id: string
   created_at: string
 }
+
+export interface MessageGroup {
+  _id: string
+}

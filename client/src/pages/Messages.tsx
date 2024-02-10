@@ -14,9 +14,14 @@ import { useUser } from '../hooks/useuser'
 import { WebSocketMessage } from '../hooks/usewebsocket'
 import Log from '../log'
 import WebSocketContext from '../contexts/websocket'
-import { getMessageForGroup } from '../services/messages'
+import {
+  getMessageForGroup,
+  getMessageGroupsForUser,
+} from '../services/messages'
 import { useSession } from '@clerk/clerk-react'
 import { pipe } from 'fp-ts/lib/function'
+import { MessageGroup } from '../services/messages.schema'
+import { P } from 'pino'
 
 const Page = styled.main`
   padding: 1rem;
@@ -291,10 +296,28 @@ const uniqueById = <T extends { id: string }>(arr: T[]): T[] =>
 
 const Profile = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
+  const [groups, setGroups] = useState<MessageGroup[]>([])
+  const [selectedGroup, setSelectedGroup] = useState<MessageGroup>()
+
   const { sendMessage, lastMessage } = useContext(WebSocketContext)
   const { user } = useUser()
   const { session } = useSession()
-  const groupId = '1980b837-6506-4b53-8363-f8d21c43822e'
+
+  useEffect(() => {
+    const getGroups = async () => {
+      const token = await session?.getToken()
+
+      if (token) {
+        const result = await getMessageGroupsForUser(token)
+
+        setGroups(result)
+      }
+    }
+
+    if (session) {
+      getGroups()
+    }
+  }, [session])
 
   useEffect(() => {
     if (lastMessage) {
@@ -306,8 +329,8 @@ const Profile = () => {
     const getPastMessages = async () => {
       const token = await session?.getToken()
 
-      if (token) {
-        const result = await getMessageForGroup(groupId, token)
+      if (token && selectedGroup?._id) {
+        const result = await getMessageForGroup(selectedGroup?._id, token)
 
         const mapped: WebSocketMessage[] = result.map((dbMessages) => ({
           action: '@@MESSAGE/RECEIVE',
@@ -323,15 +346,29 @@ const Profile = () => {
         }))
 
         setMessages((msg) => {
-          return uniqueById([...mapped, ...msg])
+          const unique = uniqueById([...mapped, ...msg])
+
+          return unique.sort((a, b) => {
+            if (a.metadata.receivedAt > b.metadata.receivedAt) {
+              return 1
+            }
+
+            if (a.metadata.receivedAt < b.metadata.receivedAt) {
+              return -1
+            }
+
+            return 0
+          })
         })
+      } else {
+        setMessages([])
       }
     }
 
     if (session && user) {
       getPastMessages()
     }
-  }, [user, setMessages, groupId, session])
+  }, [user, setMessages, selectedGroup?._id, session])
 
   const handleFormSubmit: React.FormEventHandler<HTMLFormElement> = useCallback(
     (e) => {
@@ -341,13 +378,13 @@ const Profile = () => {
       const formData = new FormData(form)
       const message = formData.get('message') as string
 
-      if (user) {
+      if (user && selectedGroup?._id) {
         sendMessage({
           action: '@@MESSAGES/SAVE',
           payload: {
             // TODO: get group ID from state
             // this is hardcoded
-            groupId: '1980b837-6506-4b53-8363-f8d21c43822e',
+            groupId: selectedGroup?._id,
             message,
           },
           metadata: {
@@ -359,7 +396,7 @@ const Profile = () => {
 
       form.reset()
     },
-    [user],
+    [user, selectedGroup],
   )
 
   const displayMessages = messages.filter(
@@ -373,6 +410,22 @@ const Profile = () => {
   return (
     <Page>
       <Typography variant="h2">Messages</Typography>
+      <select
+        onChange={(event) => {
+          const value = event.target.value
+
+          setSelectedGroup({
+            _id: value,
+          })
+        }}
+      >
+        <option value="">Select Group</option>
+        {groups.map((group) => (
+          <option key={group._id} value={group._id}>
+            {group._id}
+          </option>
+        ))}
+      </select>
       <MessageList>
         {displayMessages.map((message, i) => (
           <MessageWrap key={message.id}>

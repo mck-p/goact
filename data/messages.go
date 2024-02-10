@@ -17,6 +17,10 @@ type Message struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type MessageGroup struct {
+	Id string `json:"_id"`
+}
+
 type IMessages struct{}
 
 var Messages = &IMessages{}
@@ -95,6 +99,41 @@ func (messages *IMessages) GetMessagesForGroup(query MessageGroupQuery) ([]*Mess
 
 		rows.Scan(&message.Id, &message.AuthorId, &message.GroupId, &message.CreatedAt, &message.Message)
 		list = append(list, &message)
+	}
+
+	return list, nil
+}
+
+type UserGroupsQuery struct {
+	UserId string
+}
+
+func (messages *IMessages) GetUserGroups(query UserGroupsQuery) ([]*MessageGroup, error) {
+	sql := `
+		SELECT
+			message_groups._id as id
+		FROM
+			message_groups
+		JOIN
+			message_group_members
+			ON message_group_members.group_id = message_groups._id
+		WHERE
+			message_group_members.user_id = $1;
+	`
+
+	rows, err := connections.Database.Query(sql, query.UserId)
+
+	if err != nil {
+		return []*MessageGroup{}, err
+	}
+
+	list := []*MessageGroup{}
+
+	for rows.Next() {
+		var group MessageGroup
+
+		rows.Scan(&group.Id)
+		list = append(list, &group)
 	}
 
 	return list, nil

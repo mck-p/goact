@@ -188,6 +188,12 @@ definitions:
       message:
         type: string
     type: object
+  server.GetGroupsResponse:
+    properties:
+      groups:
+        items: {}
+        type: array
+    type: object
   server.GetMessageResponse:
     properties:
       messages:
@@ -253,6 +259,19 @@ definitions:
         type: object
       metadata: {}
     type: object
+  server.SuccessResponse-server_GetGroupsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/server.GetGroupsResponse'
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
   server.SuccessResponse-server_GetMessageResponse:
     properties:
       data:
@@ -309,6 +328,23 @@ paths:
       summary: Returns the health of the underlying system
       tags:
       - Internal
+  /api/v1/messages/groups:
+    get:
+      operationId: GetUserMessageGroups
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-server_GetGroupsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      summary: Retrieves the Message Groups that a User has access to
+      tags:
+      - Messages
   /api/v1/messages/groups/{:id}:
     get:
       responses:
