@@ -9,6 +9,10 @@ using Clerk.com as the authentication service
 
 - Websocket Messages
   - You can go to `/messages` on the client and send yourself messages.
+    - You can create multiple "groups" and send messages to each "group"
+      that you have created. We are working on the ability to add other users
+      to these groups so that you can have DMs and Group Messages. This is the
+      start of that functionality and is subject to change
   - We have connected the Client code to the Server code via Websockets
     - The interface is still being figured out and is subject to change
     - The Websocket messages are integrated with Redux so that all messages that come
