@@ -2,7 +2,7 @@ name: Test Node
 on: [push]
 
 jobs:
-  cache-and-install:
+  test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,12 +35,6 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Run tests
-        run: pnpm test
 
       - uses: ArtiomTr/jest-coverage-report-action@v2
         with:
