@@ -40,6 +40,15 @@ make stop-services # stop services, keeps data
 make restart-services # destroy services, loses data
 ```
 
+### Database Migrations
+
+```sh
+make migrate-up # migrates the database up per environment variables. See scripts/migrate-database.sh
+make migrate-down # migrates teh database back one migration. See scripts/rollback-database.sh
+
+./scripts/create-migration my_migration # creates a new migration file in migrations/
+```
+
 ### API
 
 ```sh
