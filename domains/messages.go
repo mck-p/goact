@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"mck-p/goact/commands"
 	"mck-p/goact/connections"
+	"mck-p/goact/data"
 	"mck-p/goact/tracer"
 	"sync"
 )
@@ -12,6 +13,7 @@ import (
 const (
 	SendMessage string = "@@MESSAGES/SEND"
 	EchoMessage string = "@@MESSAGES/ECHO"
+	SaveMessage string = "@@MESSAGES/SAVE"
 )
 
 type MessageDomain struct{}
@@ -33,7 +35,8 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 
 	slog.Info("Handling Message command", slog.Any("command", cmd.Id))
 
-	if cmd.Action == EchoMessage {
+	switch cmd.Action {
+	case EchoMessage:
 		// I need to send a "message::to::userId" message to
 		// our cache/pubsub client that has this information
 		connections.Cache.Publish(commands.PublishCmd{
@@ -47,9 +50,7 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 				Metadata: cmd.Metadata,
 			},
 		})
-	}
-
-	if cmd.Action == SendMessage {
+	case SendMessage:
 		connections.Cache.Publish(commands.PublishCmd{
 			CTX:   cmd.CTX,
 			Topic: MessageToTopic(cmd.Payload["receiverId"].(string)),
@@ -61,6 +62,46 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 				Payload:  cmd.Payload,
 			},
 		})
+	case SaveMessage:
+		msg, err := data.Messages.SaveMessage(data.NewMessage{
+			AuthorId: cmd.ActorId,
+			Message:  cmd.Payload["message"].(string),
+			GroupId:  cmd.Payload["groupId"].(string),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		members, err := data.Messages.GetMembersForGroup(data.GroupMebersQuery{
+			GroupId: msg.GroupId,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		// for each member of the group
+		for _, user := range members {
+
+			// in a goroutine
+			go func(userId string) {
+				// dispatch a send event so that if anyone
+				// is connected they will receive the websocket
+				// message
+				cmd.Dispatch(Command{
+					Id:      fmt.Sprintf("sub::%s", cmd.Id),
+					ActorId: SendMessage,
+					Payload: commands.Payload{
+						"recieverId": userId,
+					},
+					Metadata:         cmd.Metadata,
+					CTX:              cmd.CTX,
+					DispatchOutgoing: cmd.DispatchOutgoing,
+				})
+			}(user.Id)
+		}
+
 	}
 
 	return nil

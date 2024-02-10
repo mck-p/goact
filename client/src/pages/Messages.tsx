@@ -294,9 +294,9 @@ const Profile = () => {
 
       if (user) {
         sendMessage({
-          action: '@@MESSAGES/SEND',
+          action: '@@MESSAGES/SAVE',
           payload: {
-            receiverId: user.id,
+            groupId: user.id,
             message,
           },
           metadata: {

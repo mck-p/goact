@@ -238,6 +238,52 @@ func (handlers *Handler) Webhook(c *fiber.Ctx) error {
 	})
 }
 
+// GetGroupMessages	godoc
+//
+//		@Id			GetGroupMessages
+//		@Summary	Retrieves the last N number of messages, given some offset
+//		@Tags		Users
+//		@Produce	application/vnd.api+json
+//	 	@Param		id path string true "Group ID"
+//		@Param		limit query int false "Limit for pagination"
+//		@Param		offset query int false "Offset for pagination"
+//		@Param		orderBy query int false "DESC or ASC"
+
+// @Success	200	{object}	SuccessResponse[GetMessageResponse]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups/{:id} [get]
+func (handlers *Handler) GetGroupMessages(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetGroupMessages")
+	defer span.End()
+
+	limit := c.QueryInt("limit")
+
+	if limit == 0 {
+		limit = 100
+	}
+
+	offset := c.QueryInt("offset")
+
+	orderBy := c.Query("orderBy")
+
+	if orderBy == "" {
+		orderBy = "DESC"
+	}
+
+	messages, err := data.Messages.GetMessagesForGroup(data.MessageGroupQuery{
+		GroupId: c.Params("id"),
+		Offset:  offset,
+		Limit:   limit,
+		OrderBy: orderBy,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, messages)
+}
+
 type WebsocketMessage struct {
 	Id       string            `json:"id"`
 	Action   string            `json:"action"`

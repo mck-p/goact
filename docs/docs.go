@@ -49,6 +49,24 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/messages/groups/{:id}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-server_GetMessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/:id/messages": {
             "get": {
                 "produces": [
