@@ -4,6 +4,9 @@ on: [push]
 jobs:
   cache-and-install:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
 
     steps:
       - name: Checkout
@@ -13,7 +16,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache-dependency-path: "client"
 
       - uses: pnpm/action-setup@v3
         name: Install pnpm
