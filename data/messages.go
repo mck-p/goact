@@ -1,6 +1,7 @@
 package data
 
 import (
+	"log/slog"
 	"mck-p/goact/connections"
 	"time"
 
@@ -43,7 +44,7 @@ func (messages *IMessages) SaveMessage(msg NewMessage) (*Message, error) {
 
 	row := connections.Database.QueryRow(sql, msg.Message, msg.AuthorId, msg.GroupId)
 
-	return &message, row.Scan(&message.Id, &message.AuthorId, &message.GroupId)
+	return &message, row.Scan(&message.Id, &message.AuthorId, &message.GroupId, &message.CreatedAt)
 }
 
 type MessageGroupQuery struct {
@@ -65,9 +66,9 @@ func (messages *IMessages) GetMessagesForGroup(query MessageGroupQuery) ([]*Mess
 			messages
 		WHERE
 			group_id = $1
+		ORDER BY created_at DESC
 		LIMIT $2
-		OFFSET $3
-		ORDER BY created_at $4;
+		OFFSET $3;
 	`
 
 	if query.Limit == 0 {
@@ -78,7 +79,9 @@ func (messages *IMessages) GetMessagesForGroup(query MessageGroupQuery) ([]*Mess
 		query.OrderBy = "DESC"
 	}
 
-	rows, err := connections.Database.Query(sql, query.GroupId, query.Limit, query.Offset, query.OrderBy)
+	slog.Debug("Selecting messages", slog.Any("query", query))
+
+	rows, err := connections.Database.Query(sql, query.GroupId, query.Limit, query.Offset)
 
 	if err != nil {
 		return []*Message{}, err

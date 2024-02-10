@@ -119,6 +119,7 @@ func (cache *CacheConnection) Publish(cmd commands.PublishCmd) error {
 		body, err := json.Marshal(cmd.Data)
 
 		if err != nil {
+			slog.Warn("There was an error trying to publish the command", slog.Any("error", err))
 			return err
 		}
 

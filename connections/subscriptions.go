@@ -61,6 +61,8 @@ func (subscriptions *ISubscriptions) Unsubscribe(ctx context.Context, topic stri
 func (subscriptions *ISubscriptions) Subscribe(ctx context.Context, topic string) <-chan commands.PubSubCommand {
 	_, exists := subscriptions.currentSubscriptions[topic]
 
+	slog.Debug("We are subscribing to a topic", slog.String("topic", topic))
+
 	if exists {
 		// we already have a listener for this subscription so
 		// we don't need to do anything

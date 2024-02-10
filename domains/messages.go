@@ -1,6 +1,7 @@
 package domains
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"mck-p/goact/commands"
@@ -21,7 +22,7 @@ type MessageDomain struct{}
 var Messages = &MessageDomain{}
 
 func (messages *MessageDomain) ShouldHandle(action string) bool {
-	return action == SendMessage || action == EchoMessage
+	return action == SendMessage || action == EchoMessage || action == SaveMessage
 }
 
 func MessageToTopic(actorId string) string {
@@ -33,7 +34,7 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 	defer span.End()
 	defer wg.Done()
 
-	slog.Info("Handling Message command", slog.Any("command", cmd.Id))
+	slog.Info("Handling Message command", slog.Any("command", cmd.Id), slog.String("action", cmd.Action))
 
 	switch cmd.Action {
 	case EchoMessage:
@@ -51,7 +52,7 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 			},
 		})
 	case SendMessage:
-		connections.Cache.Publish(commands.PublishCmd{
+		err := connections.Cache.Publish(commands.PublishCmd{
 			CTX:   cmd.CTX,
 			Topic: MessageToTopic(cmd.Payload["receiverId"].(string)),
 			Data: commands.PubSubCommand{
@@ -62,7 +63,13 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 				Payload:  cmd.Payload,
 			},
 		})
+
+		if err != nil {
+			slog.Warn("Error publishg", slog.Any("error", err))
+			return err
+		}
 	case SaveMessage:
+		slog.Debug("Trying to handle Save MEssage", slog.Any("payload", cmd.Payload), slog.Any("actor", cmd.ActorId))
 		msg, err := data.Messages.SaveMessage(data.NewMessage{
 			AuthorId: cmd.ActorId,
 			Message:  cmd.Payload["message"].(string),
@@ -70,6 +77,7 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 		})
 
 		if err != nil {
+			slog.Warn("error when trying to save message", slog.Any("error", err))
 			return err
 		}
 
@@ -91,12 +99,14 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 				// message
 				cmd.Dispatch(Command{
 					Id:      fmt.Sprintf("sub::%s", cmd.Id),
-					ActorId: SendMessage,
+					Action:  SendMessage,
+					ActorId: cmd.ActorId,
 					Payload: commands.Payload{
-						"recieverId": userId,
+						"receiverId": userId,
+						"message":    cmd.Payload["message"].(string),
 					},
 					Metadata:         cmd.Metadata,
-					CTX:              cmd.CTX,
+					CTX:              context.Background(),
 					DispatchOutgoing: cmd.DispatchOutgoing,
 				})
 			}(user.Id)

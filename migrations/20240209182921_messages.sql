@@ -32,6 +32,7 @@ CREATE TABLE messages(
     author_id UUID NOT NULL,
     group_id UUID NOT NULL,
     message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (_id),
     FOREIGN KEY (author_id) REFERENCES users(_id),
     FOREIGN KEY (group_id) REFERENCES message_groups(_id)

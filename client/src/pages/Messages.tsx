@@ -11,6 +11,8 @@ import { useUser } from '../hooks/useuser'
 import { WebSocketMessage } from '../hooks/usewebsocket'
 import Log from '../log'
 import WebSocketContext from '../contexts/websocket'
+import { getMessageForGroup } from '../services/messages'
+import { useSession } from '@clerk/clerk-react'
 
 const Page = styled.main`
   padding: 1rem;
@@ -277,12 +279,42 @@ const Profile = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([])
   const { sendMessage, lastMessage } = useContext(WebSocketContext)
   const { user } = useUser()
+  const { session } = useSession()
+  const groupId = '1980b837-6506-4b53-8363-f8d21c43822e'
 
   useEffect(() => {
     if (lastMessage) {
       setMessages((msgs) => [...msgs, lastMessage])
     }
   }, [lastMessage])
+
+  useEffect(() => {
+    const getPastMessages = async () => {
+      const token = await session?.getToken()
+
+      if (token) {
+        const result = await getMessageForGroup(groupId, token)
+        const mapped: WebSocketMessage[] = result.map((dbMessages) => ({
+          action: '@@MESSAGE/RECEIVE',
+          payload: {
+            message: dbMessages.message,
+            receiverId: dbMessages.group_id,
+          },
+          metadata: {
+            authorId: dbMessages.author_id,
+            receivedAt: dbMessages.created_at,
+          },
+          id: dbMessages._id,
+        }))
+
+        setMessages((msg) => [...mapped, ...msg])
+      }
+    }
+
+    if (session && user) {
+      getPastMessages()
+    }
+  }, [user, setMessages, groupId, session])
 
   const handleFormSubmit: React.FormEventHandler<HTMLFormElement> = useCallback(
     (e) => {
@@ -296,7 +328,9 @@ const Profile = () => {
         sendMessage({
           action: '@@MESSAGES/SAVE',
           payload: {
-            groupId: user.id,
+            // TODO: get group ID from state
+            // this is hardcoded
+            groupId: '1980b837-6506-4b53-8363-f8d21c43822e',
             message,
           },
           metadata: {

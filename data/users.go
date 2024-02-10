@@ -20,7 +20,7 @@ func (users *UserData) GetUserByExternalId(id string) (*User, error) {
 		SELECT _id as id, externalid FROM users WHERE externalId = $1;
 	`
 
-	row := connections.Database.QueryRow(sql, &user, id)
+	row := connections.Database.QueryRow(sql, id)
 
 	return &user, row.Scan(&user.Id, &user.ExternalId)
 
@@ -41,7 +41,7 @@ func (users *UserData) CreateUser(cmd CreateUserCmd) (*User, error) {
 		RETURNING _id as id, externalId
 	`
 
-	row := cmd.Connection.QueryRow(sql, &user, cmd.ExternalId)
+	row := cmd.Connection.QueryRow(sql, cmd.ExternalId)
 
 	return &user, row.Scan(&user.Id, &user.ExternalId)
 }

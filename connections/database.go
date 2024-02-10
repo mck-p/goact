@@ -40,7 +40,7 @@ func (database *DatabaseConnection) Disconnect(ctx context.Context) {
 	database.conn.Close()
 }
 
-func (database *DatabaseConnection) QueryRow(sql string, target any, params ...any) pgx.Row {
+func (database *DatabaseConnection) QueryRow(sql string, params ...any) pgx.Row {
 	return database.conn.QueryRow(context.TODO(), sql, params...)
 }
 

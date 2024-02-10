@@ -372,6 +372,7 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 
 	go func(conn *websocket.Conn) {
 		for msg := range messagesForUserChannel {
+			slog.Debug("We got a message for the user on the websocket", slog.String("id", msg.Id))
 			select {
 			case <-quit:
 				slog.Debug("We have been asked to quit the messaging for user channel")
