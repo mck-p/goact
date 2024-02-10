@@ -23,9 +23,6 @@ jobs:
           version: 8
           run_install: false
 
-      - name: Collect Coverage
-        uses: ArtiomTr/jest-coverage-report-action@v2
-
       - name: Get pnpm store directory
         shell: bash
         run: |
@@ -44,3 +41,5 @@ jobs:
 
       - name: Run tests
         run: pnpm test
+
+      - uses: ArtiomTr/jest-coverage-report-action@v2
