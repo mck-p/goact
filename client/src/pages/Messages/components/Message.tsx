@@ -1,23 +1,31 @@
 import React from 'react'
-import { MessageTimestamp, Message as MessageWrap } from './styled'
-import { formatDistanceToNow } from 'date-fns'
+import { Message as MessageWrap } from './styled'
 import Markdown from 'react-markdown'
 import SyntaxHighlighter from 'react-syntax-highlighter'
 import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import remarkGfm from 'remark-gfm'
+import { useGetUserByIdQuery } from '../../../state/domains/users'
+
+import UserAvatar from './UserAvatar'
 
 interface Props {
-  payload: {
-    message: string
-  }
-  metadata: {
-    receivedAt: string
-  }
+  message: string
+  receivedAt: string
+  authorId: string
 }
 
-const Message = ({ payload, metadata }: Props) => {
+const Message = ({ message, receivedAt, authorId }: Props) => {
+  const { data, isLoading } = useGetUserByIdQuery(authorId)
+
+  if (isLoading) {
+    return null
+  }
+
   return (
     <MessageWrap>
+      {data && (
+        <UserAvatar name={data.name} url={data.avatarUrl} date={receivedAt} />
+      )}
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -40,13 +48,8 @@ const Message = ({ payload, metadata }: Props) => {
           },
         }}
       >
-        {payload.message}
+        {message}
       </Markdown>
-      <MessageTimestamp dateTime={metadata.receivedAt}>
-        {formatDistanceToNow(new Date(metadata.receivedAt), {
-          addSuffix: true,
-        })}
-      </MessageTimestamp>
     </MessageWrap>
   )
 }

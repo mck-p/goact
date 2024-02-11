@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Button, Divider, TextField, Typography } from '@mui/material'
+import { Divider, Typography } from '@mui/material'
 
 import Log from '../../log'
-import { createMessageGroup } from '../../services/messages'
 import GroupSelector from './components/GroupSelector'
 import GroupCreator from './components/GroupCreator'
 import useGroupMessages from '../../hooks/usegroupmessages'
@@ -17,27 +16,40 @@ import {
 import Message from './components/Message'
 import MessageInput from './components/MessageInput'
 
-const Messages = () => {
-  const {
-    selectedGroup,
-    sendMessage,
-    user,
-    session,
-    setGroups,
-    setSelectedGroup,
-    messages,
-    groups,
-  } = useGroupMessages()
+import {
+  useCreateGroupMutation,
+  useGetGroupsQuery,
+  useGetMessagesForGroupQuery,
+} from '../../state/domains/messages'
+import { useSelector } from 'react-redux'
+import { RootState } from '../../state/store'
+import { sortMessages } from './utils'
 
+const Messages = () => {
+  const { selectedGroup, sendMessage, user, session, setSelectedGroup } =
+    useGroupMessages()
+
+  const { data: messages = [] } = useGetMessagesForGroupQuery(
+    selectedGroup?._id || '',
+  )
   const [currentMessageState, setCurrentMessageState] = useState<
     string | undefined
   >()
+
+  const { data: groups = [] } = useGetGroupsQuery(undefined)
+  const [createGroup, newlyCreatedGroup]: any = useCreateGroupMutation()
 
   useEffect(() => {
     if (groups.length && !selectedGroup) {
       setSelectedGroup(groups[0])
     }
   }, [groups, selectedGroup])
+
+  useEffect(() => {
+    if (newlyCreatedGroup.isSuccess) {
+      setSelectedGroup(newlyCreatedGroup.data)
+    }
+  }, [newlyCreatedGroup, setSelectedGroup])
 
   const handleSendMessage = useCallback(() => {
     if (user && selectedGroup?._id && currentMessageState) {
@@ -72,8 +84,8 @@ const Messages = () => {
             const formData = new FormData(e.target)
             const name = formData.get('name') as string
 
-            const messageGroup = await createMessageGroup(name, token)
-            setGroups((old) => [...old, messageGroup])
+            const messageGroup = await createGroup(name).unwrap()
+
             setSelectedGroup(messageGroup)
           } catch (err) {
             Log.warn({ err }, 'Error when trying to create a message group')
@@ -85,14 +97,6 @@ const Messages = () => {
     },
     [session],
   )
-
-  const displayMessages = messages.filter(
-    ({ action }) => !action.includes('@@INTERNAL'),
-  )
-
-  if (!user) {
-    Log.warn("We should have a user here but we don't!")
-  }
 
   return (
     <Page>
@@ -110,12 +114,18 @@ const Messages = () => {
         </GroupSelectAndInput>
         <MessagesAndInput>
           <MessageList>
-            {displayMessages.map((message, i) => (
-              <MessageWrap key={message.id}>
-                <Message {...message} />
-                {i !== displayMessages.length - 1 ? <Divider /> : null}
-              </MessageWrap>
-            ))}
+            {Array.from(messages)
+              .sort(sortMessages)
+              .map((message, i) => (
+                <MessageWrap key={message._id}>
+                  <Message
+                    authorId={message.author_id}
+                    receivedAt={message.created_at}
+                    message={message.message}
+                  />
+                  {i !== 0 ? <Divider /> : null}
+                </MessageWrap>
+              ))}
           </MessageList>
           <MessageInput
             currentValue={currentMessageState}
@@ -130,4 +140,14 @@ const Messages = () => {
   )
 }
 
-export default Messages
+const OnlyAuthenticatedMessages = () => {
+  const token = useSelector((state: RootState) => state.auth.token)
+
+  if (!token) {
+    return null
+  }
+
+  return <Messages />
+}
+
+export default OnlyAuthenticatedMessages

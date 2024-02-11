@@ -13,7 +13,6 @@ import (
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 type Handler struct{}
@@ -179,6 +178,45 @@ func (handlers *Handler) GetUserByExternalId(c *fiber.Ctx) error {
 
 	if err != nil {
 		slog.Warn("Error trying to get user by external ID", slog.Any("error", err), slog.String("external-id", externalId))
+
+		return err
+	}
+
+	return JSONAPI(c, 200, user)
+}
+
+// GetUserById	godoc
+//
+//	@Id			GetUserById
+//	@Summary	Returns the Goact User based on their internal ID
+//	@Tags		Users
+//	@Produce	application/vnd.api+json
+//	@Security	BearerToken
+//	@Success	200	{object}	SuccessResponse[data.User]
+//	@Failure	500	{object}	ErrorResponse[GenericError]
+//	@Router		/api/v1/users/{id} [get]
+func (handlers *Handler) GetUserById(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetUserById")
+	defer span.End()
+	user := c.Locals("user").(*data.User)
+
+	id := c.Params("id")
+	canGetUserById := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("user::%s", id),
+		"view",
+	)
+
+	if !canGetUserById {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "You are not authorized to perform that action",
+		})
+	}
+
+	user, err := data.Users.GetById(id)
+
+	if err != nil {
+		slog.Warn("Error trying to get user by ID", slog.Any("error", err), slog.String("id", id))
 
 		return err
 	}
@@ -393,6 +431,7 @@ func handleMessage(msg []byte, c *websocket.Conn, user *data.User, dispatch func
 		Action:   incomingMessage.Action,
 		Payload:  incomingMessage.Payload,
 		Metadata: incomingMessage.Metadata,
+		Id:       incomingMessage.Id,
 		Dispatch: dispatch,
 	}
 
@@ -436,7 +475,7 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 			return nil
 		}
 
-		slog.Debug("Sending new message", slog.Any("action", cmd.Action), slog.Any("receiverId", user.Id), slog.String("actorId", cmd.ActorId))
+		slog.Debug("Sending new message", slog.Any("action", cmd.Action), slog.Any("receiverId", user.Id), slog.String("actorId", cmd.ActorId), slog.String("id", cmd.Id))
 
 		cmd.Metadata["actorId"] = cmd.ActorId
 
@@ -444,7 +483,7 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 			Action:   fmt.Sprintf("@@SERVER-SENT/%s", cmd.Action),
 			Payload:  cmd.Payload,
 			Metadata: cmd.Metadata,
-			Id:       uuid.NewString(),
+			Id:       cmd.Id,
 		}
 
 		if err = conn.WriteJSON(outgoingMsg); err != nil {
@@ -469,6 +508,7 @@ func (handlers *Handler) WebsocketHandler(c *websocket.Conn) {
 					Payload:  msg.Payload,
 					Action:   msg.Action,
 					Metadata: msg.Metadata,
+					Id:       msg.Id,
 				}, conn)
 
 				if err != nil {

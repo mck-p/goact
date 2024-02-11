@@ -18,7 +18,14 @@ export const MessageList = styled(Paper)`
   max-width: 1440px;
   display: flex;
   flex-direction: column;
+  flex-direction: column-reverse;
   margin: 0 auto;
+  height: 60vh;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(33, 33, 33, 1) rgba(0, 0, 0, 0);
+  border-radius: 8px;
+
   @media print {
     *,
     *:before,

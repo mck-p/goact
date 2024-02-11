@@ -1,7 +1,7 @@
 import React from 'react'
 import { Provider } from 'react-redux'
 
-import store from './store'
+import { store } from './store'
 
 /**
  * State holds the _global_ state of the application via redux

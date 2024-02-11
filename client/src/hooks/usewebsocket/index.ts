@@ -3,6 +3,7 @@ import { useSession } from '@clerk/clerk-react'
 import { Lens } from 'monocle-ts'
 import Log from '../../log'
 import { useDispatch } from 'react-redux'
+import { manuallySetMessageInState } from '../../state/domains/messages'
 
 export interface WebSocketMessage {
   action: string
@@ -58,17 +59,7 @@ const useWebsocket = (connStr: string, ...headers: string[]) => {
   const sendMessage = useCallback(
     (msg: WebSocketMessage) => {
       if (conn && conn.OPEN) {
-        /**
-         * We are dispatching _before_ we send because
-         * we want to allow for optomistic rendering
-         */
         const outgoingMessage = assignSentAt(msg)
-
-        dispatch({
-          type: outgoingMessage.action,
-          payload: outgoingMessage.payload,
-          metadata: outgoingMessage.metadata,
-        })
 
         conn.send(encode(outgoingMessage))
       } else {

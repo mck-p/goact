@@ -1,79 +1,39 @@
-import { useUser, useSession } from '@clerk/clerk-react'
+import { useSession } from '@clerk/clerk-react'
 import { useState, useContext, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 import WebSocketContext from '../contexts/websocket'
-import { mapDatabaseToWebsocket, sortMessages } from '../pages/Messages/utils'
-import {
-  getMessageGroupsForUser,
-  getMessageForGroup,
-} from '../services/messages'
 import { MessageGroup } from '../services/messages.schema'
-import { WebSocketMessage } from './usewebsocket'
 
-import Log from '../log'
+import useUser from './useuser'
+import { manuallySetMessageInState } from '../state/domains/messages'
 
 const useGroupMessages = () => {
-  const [messages, setMessages] = useState<WebSocketMessage[]>([])
   const [groups, setGroups] = useState<MessageGroup[]>([])
   const [selectedGroup, setSelectedGroup] = useState<MessageGroup>()
 
   const { sendMessage, lastMessage } = useContext(WebSocketContext)
   const { user } = useUser()
   const { session } = useSession()
-
-  useEffect(() => {
-    const getGroups = async () => {
-      const token = await session?.getToken()
-
-      if (token) {
-        try {
-          const result = await getMessageGroupsForUser(token)
-
-          setGroups(result)
-        } catch (err) {
-          Log.warn({ err }, 'Error getting message groups')
-        }
-      }
-    }
-
-    if (session) {
-      getGroups()
-    }
-  }, [session])
+  const dispatch = useDispatch()
 
   useEffect(() => {
     if (lastMessage) {
-      setMessages((msgs) => [...msgs, lastMessage])
+      if (lastMessage.action === '@@SERVER-SENT/@@MESSAGES/SEND') {
+        dispatch(
+          manuallySetMessageInState({
+            _id: lastMessage.id,
+            message: lastMessage.payload.message,
+            created_at: lastMessage.metadata.receivedAt,
+            author_id: lastMessage.metadata.authorId,
+            group_id: lastMessage.payload.groupId,
+            sent_at: lastMessage.metadata.receivedAt,
+          }) as any,
+        )
+      }
     }
   }, [lastMessage])
 
-  useEffect(() => {
-    const getPastMessages = async () => {
-      const token = await session?.getToken()
-
-      if (token && selectedGroup?._id) {
-        try {
-          const result = await getMessageForGroup(selectedGroup?._id, token)
-
-          const mapped: WebSocketMessage[] = result.map(mapDatabaseToWebsocket)
-
-          setMessages(() => {
-            return mapped.sort(sortMessages)
-          })
-        } catch (err) {
-          Log.warn({ err }, 'Error when trying to get messages')
-        }
-      } else {
-        setMessages([])
-      }
-    }
-
-    if (session && user) {
-      getPastMessages()
-    }
-  }, [user, setMessages, selectedGroup?._id, session])
-
   return {
-    messages,
     groups,
     sendMessage,
     setSelectedGroup,

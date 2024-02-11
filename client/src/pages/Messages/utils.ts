@@ -14,13 +14,13 @@ export const mapDatabaseToWebsocket = (dbMessages: Message) => ({
   id: dbMessages._id,
 })
 
-export const sortMessages = (a: WebSocketMessage, b: WebSocketMessage) => {
-  if (a.metadata.receivedAt > b.metadata.receivedAt) {
-    return 1
+export const sortMessages = (a: Message, b: Message) => {
+  if (a.created_at > b.created_at) {
+    return -1
   }
 
-  if (a.metadata.receivedAt < b.metadata.receivedAt) {
-    return -1
+  if (a.created_at < b.created_at) {
+    return 1
   }
 
   return 0
