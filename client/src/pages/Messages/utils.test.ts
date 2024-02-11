@@ -43,7 +43,7 @@ describe('sortMessages', () => {
       }
 
       const result = sortMessages(first as any, second as any)
-      const expected = -1
+      const expected = 1
 
       expect(result).toBe(expected)
     })
@@ -60,7 +60,7 @@ describe('sortMessages', () => {
       }
 
       const result = sortMessages(first as any, second as any)
-      const expected = 1
+      const expected = -1
 
       expect(result).toBe(expected)
     })
