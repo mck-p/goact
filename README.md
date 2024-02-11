@@ -9,7 +9,22 @@ using Clerk.com as the authentication service
 
 ### Messages
 
-> Demo video at /artifacts/message-groups-demo.webm
+#### Dashbaord
+
+![Dashboard](/artifacts/dashboard.png)
+
+#### Users Powered by [Clerk](https://clerk.dev)
+
+![Profile](/artifacts/profile.png)
+
+#### Messaging
+
+_**Overview**_
+
+![Message Overview](/artifacts/messages-self.png)
+
+_**Group Messages**_
+![Message Group](/artifacts/message-group.png)
 
 - Websocket Messages
   - You can go to `/messages` on the client and send yourself messages.
