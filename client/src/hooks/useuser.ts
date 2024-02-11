@@ -7,6 +7,8 @@ import Log from '../log'
 interface User {
   id: string
   externalId: string
+  name: string
+  avatarUrl: string
 }
 
 interface ClerkUser {
@@ -38,6 +40,8 @@ const getDatabaseUser = async (req: ClerkToDatabaseRequest): Promise<void> => {
   const user = {
     id: dbUser._id,
     externalId: dbUser.externalId,
+    name: dbUser.name,
+    avatarUrl: dbUser.avatarUrl,
   }
 
   Log.info({ user }, 'Got user from database')

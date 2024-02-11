@@ -204,6 +204,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerToken": []
+                    }
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Returns the Goact User based on their internal ID",
+                "operationId": "GetUserById",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_User"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/weather": {
             "get": {
                 "security": [
@@ -508,7 +539,13 @@ const docTemplate = `{
                 "_id": {
                     "type": "string"
                 },
+                "avatarUrl": {
+                    "type": "string"
+                },
                 "externalid": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

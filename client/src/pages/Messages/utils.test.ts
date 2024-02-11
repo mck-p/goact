@@ -33,38 +33,13 @@ describe('mapDatabaseToWebsocket', () => {
 
 describe('sortMessages', () => {
   describe('When given the first value being received sooner than the second', () => {
-    it('returns -1', () => {
-      const first = {
-        metadata: {
-          receivedAt: 1,
-        },
-      }
-
-      const second = {
-        metadata: {
-          receivedAt: 2,
-        },
-      }
-
-      const result = sortMessages(first as any, second as any)
-      const expected = -1
-
-      expect(result).toBe(expected)
-    })
-  })
-
-  describe('When given the first value being received later than the second', () => {
     it('returns 1', () => {
       const first = {
-        metadata: {
-          receivedAt: 2,
-        },
+        created_at: 1,
       }
 
       const second = {
-        metadata: {
-          receivedAt: 1,
-        },
+        created_at: 2,
       }
 
       const result = sortMessages(first as any, second as any)
@@ -74,18 +49,31 @@ describe('sortMessages', () => {
     })
   })
 
-  describe('When given the first value being received the same time as the second', () => {
-    it('returns 0', () => {
+  describe('When given the first value being received later than the second', () => {
+    it('returns -1', () => {
       const first = {
-        metadata: {
-          receivedAt: 1,
-        },
+        created_at: 2,
       }
 
       const second = {
-        metadata: {
-          receivedAt: 1,
-        },
+        created_at: 1,
+      }
+
+      const result = sortMessages(first as any, second as any)
+      const expected = -1
+
+      expect(result).toBe(expected)
+    })
+  })
+
+  describe('When given the first value being received the same time as the second', () => {
+    it('returns 0', () => {
+      const first = {
+        created_at: 1,
+      }
+
+      const second = {
+        created_at: 1,
       }
 
       const result = sortMessages(first as any, second as any)

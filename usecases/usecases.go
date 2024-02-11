@@ -91,6 +91,8 @@ func (usecases *UseCase) ProcessUserCreatedWebhook(cmd ProcessUerCreateWebhookCm
 	_, err := cmd.Repository.CreateUser(data.CreateUserCmd{
 		ExternalId: cmd.Webhook.Data.Id,
 		Connection: connections.Database,
+		Name:       fmt.Sprintf("%s %s", cmd.Webhook.Data.FirstName, cmd.Webhook.Data.LastName),
+		AvatarUrl:  cmd.Webhook.Data.ProfileImageUrl,
 	})
 
 	if err != nil {
@@ -159,6 +161,7 @@ func (usecases *UseCase) ProcessAuthWebhook(cmd AuthWebhookCmd, rawBody []byte) 
 
 type WebSocketMessageCmd struct {
 	CTX      context.Context
+	Id       string
 	ActorId  string
 	Action   string
 	Payload  commands.Payload
@@ -193,6 +196,7 @@ func (usecases *UseCase) ProcessWebSocketMessage(cmd WebSocketMessageCmd) error 
 		ActorId:  cmd.ActorId,
 		DispatchOutgoing: func(outgoingCmd domains.Command) {
 			cmd.Dispatch(WebSocketMessageCmd{
+				Id:       outgoingCmd.Id,
 				CTX:      ctx,
 				ActorId:  cmd.ActorId,
 				Action:   outgoingCmd.Action,

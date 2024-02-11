@@ -154,7 +154,11 @@ definitions:
     properties:
       _id:
         type: string
+      avatarUrl:
+        type: string
       externalid:
+        type: string
+      name:
         type: string
     type: object
   data.WeatherCondition:
@@ -435,6 +439,25 @@ paths:
           schema:
             $ref: '#/definitions/server.ErrorResponse-server_GenericError'
       summary: Retrieves the last N number of messages, given some offset
+      tags:
+      - Users
+  /api/v1/users/{id}:
+    get:
+      operationId: GetUserById
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_User'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      security:
+      - BearerToken: []
+      summary: Returns the Goact User based on their internal ID
       tags:
       - Users
   /api/v1/users/external-id/{externalid}:

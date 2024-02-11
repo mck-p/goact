@@ -69,7 +69,7 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 			CTX:   cmd.CTX,
 			Topic: MessageToTopic(cmd.Payload["receiverId"].(string)),
 			Data: commands.PubSubCommand{
-				Id:       cmd.Id,
+				Id:       cmd.Payload["id"].(string),
 				ActorId:  cmd.ActorId,
 				Action:   cmd.Action,
 				Metadata: cmd.Metadata,
@@ -127,6 +127,8 @@ func (messages *MessageDomain) Process(cmd Command, wg *sync.WaitGroup) error {
 					Payload: commands.Payload{
 						"receiverId": userId,
 						"message":    cmd.Payload["message"].(string),
+						"groupId":    cmd.Payload["groupId"].(string),
+						"id":         cmd.Id,
 					},
 					Metadata:         cmd.Metadata,
 					CTX:              context.Background(),

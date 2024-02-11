@@ -1,5 +1,5 @@
 import React from 'react'
-import { Switch, Route } from 'wouter'
+import { Switch, Route, Redirect } from 'wouter'
 
 import Signup from './pages/Signup'
 import SignIn from './pages/SignIn'
@@ -10,6 +10,8 @@ import NotFound from './errors/NotFound'
 
 import TopBar from './components/TopBar'
 import PageMeta from './components/PageMeta'
+import useConnectedAuthUser from './hooks/useConnectedAuthUser'
+import useUser from './hooks/useuser'
 
 /**
  * This is the entrypoint to our business logic. Above this will be
@@ -17,6 +19,7 @@ import PageMeta from './components/PageMeta'
  * be any views, forms, etc business components
  */
 const App = () => {
+  useConnectedAuthUser()
   return (
     <>
       <PageMeta />

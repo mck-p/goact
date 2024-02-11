@@ -7,18 +7,39 @@ using Clerk.com as the authentication service
 
 ## Features
 
+### Messages
+
+#### Dashbaord
+
+![Dashboard](/artifacts/dashboard.png)
+
+#### Users Powered by [Clerk](https://clerk.dev)
+
+![Profile](/artifacts/profile.png)
+
+#### Messaging
+
+_**Overview**_
+
+![Message Overview](/artifacts/messages-self.png)
+
+_**Group Messages**_
+![Message Group](/artifacts/message-group.png)
+
 - Websocket Messages
   - You can go to `/messages` on the client and send yourself messages.
     - You can create multiple "groups" and send messages to each "group"
-      that you have created. We are working on the ability to add other users
-      to these groups so that you can have DMs and Group Messages. This is the
-      start of that functionality and is subject to change
+      that you have created. This is the start of that functionality and
+      is subject to change.
+    - You currently have to manually add users to groups. This will be changed
+      once we figure out a safe way to allow you to choose users to add
   - We have connected the Client code to the Server code via Websockets
     - The interface is still being figured out and is subject to change
     - The Websocket messages are integrated with Redux so that all messages that come
       from the Websocket messages server are sent directly to the Redux store in order to
       allow us to trigger logic based on server-sent events in the same way we
       would handle it if the client sent the event themselves
+  -
 - Swagger Docs
   - You can go to `/docs` on the API service to find Swagger docs and a UI for
     exploring the APIs available.
