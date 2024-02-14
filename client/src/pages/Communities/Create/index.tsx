@@ -8,6 +8,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { useAddCommunityMutation } from '../../../state/domains/communities'
 
 const Page = styled.main`
   width: 100%;
@@ -26,12 +27,15 @@ const Form = styled.form`
 `
 
 const CreateCommunity = () => {
+  const [createCommunitiy, createdCommunity] = useAddCommunityMutation()
   const handleFormSubmit: React.FormEventHandler = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target as any)
 
-    // @ts-ignore
-    console.dir([...formData.values()])
+    const name = formData.get('name') as string
+    const checked = formData.get('public')
+
+    console.log(name, checked)
   }
 
   return (
