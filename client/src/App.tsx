@@ -7,11 +7,11 @@ import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import Messages from './pages/Messages'
 import NotFound from './errors/NotFound'
+import * as Communities from './pages/Communities'
 
 import TopBar from './components/TopBar'
 import PageMeta from './components/PageMeta'
 import useConnectedAuthUser from './hooks/useConnectedAuthUser'
-import useUser from './hooks/useuser'
 
 /**
  * This is the entrypoint to our business logic. Above this will be
@@ -30,6 +30,9 @@ const App = () => {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/profile" component={Profile} />
         <Route path="/messages" component={Messages} />
+        <Route path="/communities" component={Communities.List} />
+        <Route path="/communities/create" component={Communities.Create} />
+
         <Route component={NotFound} />
       </Switch>
     </>

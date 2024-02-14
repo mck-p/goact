@@ -39,6 +39,11 @@ const Title = () => {
         <Route path="/signup">{translations('title.signup')}</Route>
         <Route path="/signin">{translations('title.signin')}</Route>
         <Route path="/messages">{translations('title.messages')}</Route>
+        <Route path="/communities">{translations('title.communities')}</Route>
+        <Route path="/communities/create">
+          {translations('title.communities')}
+        </Route>
+
         <Route>{translations('title.not-found')}</Route>
       </Switch>
     </Typography>
@@ -59,6 +64,9 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             <Link href="/messages">
               <Button>{translations('nav.buttons.messages.label')}</Button>
             </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
+            </Link>
           </>
         </Route>
         <Route path="/profile">
@@ -69,6 +77,9 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             <Link href="/messages">
               <Button>{translations('nav.buttons.messages.label')}</Button>
             </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
+            </Link>
           </>
         </Route>
         <Route path="/messages">
@@ -78,6 +89,35 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             </Link>
             <Link href="/profile">
               <Button>{translations('nav.buttons.profile.label')}</Button>
+            </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
+            </Link>
+          </>
+        </Route>
+        <Route path="/communities">
+          <>
+            <Link href="/dashboard">
+              <Button>{translations('nav.buttons.dashboard.label')}</Button>
+            </Link>
+            <Link href="/profile">
+              <Button>{translations('nav.buttons.profile.label')}</Button>
+            </Link>
+            <Link href="/messages">
+              <Button>{translations('nav.buttons.messages.label')}</Button>
+            </Link>
+          </>
+        </Route>
+        <Route path="/communities/create">
+          <>
+            <Link href="/dashboard">
+              <Button>{translations('nav.buttons.dashboard.label')}</Button>
+            </Link>
+            <Link href="/profile">
+              <Button>{translations('nav.buttons.profile.label')}</Button>
+            </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
             </Link>
           </>
         </Route>

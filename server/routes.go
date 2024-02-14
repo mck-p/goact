@@ -1,6 +1,9 @@
 package server
 
 import (
+	"fmt"
+	"log/slog"
+
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
@@ -13,42 +16,90 @@ type Route struct {
 	Handlers []fiber.Handler
 }
 
-/*
-*
+func createPrefixedRoutes(prefix string, routes []Route) []Route {
+	result := []Route{}
 
-	List of all routes we want to make accessible
-*/
-var routes = []Route{
+	for _, route := range routes {
+		path := route.Path
+
+		if path != "" {
+			path = fmt.Sprintf("%s/%s", prefix, route.Path)
+		} else {
+			path = prefix
+		}
+
+		slog.Debug("Help",
+			slog.String("path", path),
+			slog.String("prefix", prefix),
+			slog.Any("route", route.Path),
+		)
+
+		result = append(result, Route{
+			Handlers: route.Handlers,
+			Method:   route.Method,
+			Path:     path,
+		})
+	}
+
+	return result
+}
+
+var docRoutes = createPrefixedRoutes("docs", []Route{
 	{
 		Method: "get",
-		Path:   "/docs/*",
+		Path:   "docs/*",
 		Handlers: []fiber.Handler{
 			swagger.HandlerDefault,
 		},
 	},
+})
+
+var internalRoutes = createPrefixedRoutes(".well-known", []Route{
 	{
 		Method:   "get",
-		Path:     "/.well-known/healthcheck",
+		Path:     "healthcheck",
 		Handlers: []fiber.Handler{Handlers.Healthcheck},
 	},
+})
+
+var userRoutes = createPrefixedRoutes("users", []Route{
 	{
 		Method:   "get",
-		Path:     "/api/v1/users/:id/messages",
+		Path:     ":id/messages",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetMessages},
 	},
 	{
 		Method:   "get",
-		Path:     "/api/v1/weather",
+		Path:     "external-id/:externalid",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetUserByExternalId},
+	},
+	{
+		Method:   "get",
+		Path:     ":id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetUserById},
+	},
+})
+
+var weatherRoutes = createPrefixedRoutes("weather", []Route{
+	{
+		Method:   "get",
+		Path:     "",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetWeather},
 	},
+})
+
+var webhookRoutes = createPrefixedRoutes("webhooks", []Route{
 	{
 		Method:   "post",
-		Path:     "/api/v1/webhooks",
+		Path:     "webhooks",
 		Handlers: []fiber.Handler{Handlers.Webhook},
 	},
+})
+
+var websocketRoutes = createPrefixedRoutes("ws", []Route{
 	{
 		Method: "get",
-		Path:   "/ws",
+		Path:   "",
 		Handlers: []fiber.Handler{websocket.New(Handlers.WebsocketHandler, websocket.Config{
 			Subprotocols: []string{
 				// Allow the connection to send Authorization tokens
@@ -57,29 +108,66 @@ var routes = []Route{
 			},
 		})},
 	},
+})
+
+var messageRoutes = createPrefixedRoutes("messaages", []Route{
 	{
 		Method:   "get",
-		Path:     "/api/v1/users/external-id/:externalid",
-		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetUserByExternalId},
-	},
-	{
-		Method:   "get",
-		Path:     "/api/v1/messages/groups/:id",
+		Path:     "groups/:id",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetGroupMessages},
 	},
 	{
 		Method:   "get",
-		Path:     "/api/v1/messages/groups",
+		Path:     "groups",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetGroups},
 	},
 	{
 		Method:   "post",
-		Path:     "/api/v1/messages/groups",
+		Path:     "groups",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateMessageGroup},
 	},
+})
+
+var communityRoutes = createPrefixedRoutes("communites", []Route{
 	{
-		Method:   "get",
-		Path:     "/api/v1/users/:id",
-		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetUserById},
+		Method:   "post",
+		Path:     "communities",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunity},
 	},
+})
+
+var apiRoutes = [][]Route{
+	userRoutes,
+	messageRoutes,
+	communityRoutes,
+	weatherRoutes,
+	webhookRoutes,
+}
+
+func generateApiRoutes() []Route {
+	api := []Route{}
+
+	for _, routes := range apiRoutes {
+		api = append(api, createPrefixedRoutes("api/v1", routes)...)
+	}
+
+	return api
+}
+
+/*
+*
+
+	List of all routes we want to make accessible
+*/
+func GenerateRoutes() []Route {
+	routes := []Route{}
+
+	routes = append(routes, docRoutes...)
+
+	routes = append(routes, internalRoutes...)
+	routes = append(routes, websocketRoutes...)
+
+	routes = append(routes, generateApiRoutes()...)
+
+	return routes
 }

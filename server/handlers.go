@@ -408,6 +408,47 @@ func (handlers *Handler) CreateMessageGroup(c *fiber.Ctx) error {
 	return JSONAPI(c, 201, result)
 }
 
+type CreateCommunityRequest struct {
+	Name string `json:"name"`
+}
+
+// @Id CreateCommunity
+// @Summary Creates a new Community
+// @Description This will create a new Community and assign the creator as the only memberof that community
+// @Tags Communities
+// @Accept json
+//
+//	@Produce	application/vnd.api+json
+//
+// @Param requestBody body CreateCommunityRequest true "New Community Information"
+//
+// @Success 200 {object} SuccessResponse[data.Community]
+// @Router /api/v1/communities [post]
+func (handlers *Handler) CreateCommunity(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateCommunity")
+	defer span.End()
+
+	user := c.Locals("user").(*data.User)
+
+	payload := CreateCommunityRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := data.Communities.CreateCommunity(data.NewCommunity{
+		Name:      payload.Name,
+		CreatorId: user.Id,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, result)
+}
+
 type WebsocketMessage struct {
 	Id       string            `json:"id"`
 	Action   string            `json:"action"`

@@ -48,7 +48,7 @@ export const decode = (msg: string) => JSON.parse(msg)
  */
 const useWebsocket = (connStr: string, ...headers: string[]) => {
   const { session } = useSession()
-  const dispatch = useDispatch()
+
   const [conn, setConn] = useState<WebSocket>()
   const [lastMessage, setLastMessage] = useState<WebSocketMessage>()
 

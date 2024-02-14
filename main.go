@@ -26,7 +26,7 @@ func init() {
 
 func main() {
 	slog.Debug("Starting up. Hello!")
-	srv := server.New()
+	srv := server.New(server.GenerateRoutes())
 	port, err := utils.GetenvInt("PORT")
 
 	if err != nil {

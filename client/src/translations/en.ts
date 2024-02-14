@@ -7,6 +7,7 @@ export default {
   ['title.signup']: 'Sign Up',
   ['title.signin']: 'Sign In',
   ['title.messages']: 'Messages',
+  ['title.communities']: 'Communities',
 
   ['title.not-found']: 'Not Found',
 
@@ -19,6 +20,7 @@ export default {
   ['nav.buttons.signin.label']: 'Sign In',
   ['nav.buttons.signup.label']: 'Sign Up',
   ['nav.buttons.messages.label']: 'Messages',
+  ['nav.buttons.communities.label']: 'Communities',
 
   /**
    * PAGE-LEVEL CONCERNS

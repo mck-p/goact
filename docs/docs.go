@@ -49,6 +49,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/communities": {
+            "post": {
+                "description": "This will create a new Community and assign the creator as the only memberof that community",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Creates a new Community",
+                "operationId": "CreateCommunity",
+                "parameters": [
+                    {
+                        "description": "New Community Information",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.CreateCommunityRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_Community"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/messages/groups": {
             "get": {
                 "produces": [
@@ -330,6 +365,20 @@ const docTemplate = `{
                 }
             }
         },
+        "data.Community": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "data.CurrentWeatherUpstreamResponse": {
             "type": "object",
             "properties": {
@@ -564,6 +613,14 @@ const docTemplate = `{
                 }
             }
         },
+        "server.CreateCommunityRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "server.ErrorResponse-server_GenericError": {
             "type": "object",
             "properties": {
@@ -672,6 +729,25 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {},
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-data_Community": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data.Community"
+                },
                 "includes": {
                     "type": "array",
                     "items": {}
