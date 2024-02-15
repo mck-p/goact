@@ -62,6 +62,8 @@ export default {
   ['page.dashboard.card.messages.title']: 'Recent Message',
   ['page.dashboard.card.contacts.title']: 'Contacts',
 
+  ['page.communities.list.title']: 'Your Communities',
+
   /**
    * FORMS
    */

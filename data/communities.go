@@ -3,6 +3,8 @@ package data
 import (
 	"mck-p/goact/connections"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Community struct {
@@ -51,4 +53,39 @@ func (messages *ICommunities) CreateCommunity(comm NewCommunity) (*Community, er
 	_, err = connections.Database.Exec(sql, community.Id, comm.CreatorId)
 
 	return &community, err
+}
+
+type UserCommunitiesQuery struct {
+	UserId string
+}
+
+func (messages *ICommunities) GetUserCommunities(query UserCommunitiesQuery) ([]Community, error) {
+	sql := `
+		SELECT
+			communities._id as id,
+			communities.name as name,
+			communities.is_public as isPublic,
+			communities.created_at as created_at
+		FROM
+			communities
+		JOIN
+			community_members
+			ON community_members.community_id = communities._id
+		WHERE
+			community_members.user_id = $1;
+	`
+
+	rows, err := connections.Database.Query(sql, query.UserId)
+
+	if err != nil {
+		return []Community{}, err
+	}
+
+	list, err := pgx.CollectRows(rows, pgx.RowToStructByName[Community])
+
+	if err != nil {
+		return []Community{}, err
+	}
+
+	return list, nil
 }

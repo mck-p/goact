@@ -43,4 +43,4 @@ export const communityApi = createApi({
   }),
 })
 
-export const { useAddCommunityMutation } = communityApi
+export const { useAddCommunityMutation, useGetCommunitiesQuery } = communityApi

@@ -367,6 +367,32 @@ func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
 	return JSONAPI(c, 200, groups)
 }
 
+// GetUserCommunities	godoc
+//
+//	@Id			GetUserCommunities
+//	@Summary	Retrieves the Communities that a User has access to
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[GetGroupsResponse]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups [get]
+func (handlers *Handler) GetCommunities(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetrCommunities")
+	defer span.End()
+	user := c.Locals("user").(*data.User)
+
+	communities, err := data.Communities.GetUserCommunities(data.UserCommunitiesQuery{
+		UserId: user.Id,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, communities)
+}
+
 type MessageGroupRequest struct {
 	Name string `json:"name"`
 }
