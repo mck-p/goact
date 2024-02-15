@@ -7,17 +7,15 @@ using Clerk.com as the authentication service
 
 ## Features
 
-### Messages
-
-#### Dashbaord
+### Dashbaord
 
 ![Dashboard](/artifacts/dashboard.png)
 
-#### Users Powered by [Clerk](https://clerk.dev)
+### Users Powered by [Clerk](https://clerk.dev)
 
 ![Profile](/artifacts/profile.png)
 
-#### Messaging
+### Messages
 
 _**Overview**_
 
@@ -40,6 +38,23 @@ _**Group Messages**_
       allow us to trigger logic based on server-sent events in the same way we
       would handle it if the client sent the event themselves
   -
+
+### Communities
+
+- `Communities` are the top level that we are using as a way to group different _things_ together.
+  - The whole point of this application will be to help you experience life together with your communities
+    while being apart geographically.
+  - All users will be a part of one or many Communities and will be able to interact with anyone in any
+    community that they are a part of
+  - Communities can be `public` or `private`. `public` communities will show up for everyone to join while
+    `private` will be invite only.
+  - We will connect the group messaging to the communities domain so that you can select people to message
+    and to add to group messages based on the groups that you are in.
+    - We are not sure if we will allow you to have group messages with people across groups or not. This is
+      still in development
+
+### Docs
+
 - Swagger Docs
   - You can go to `/docs` on the API service to find Swagger docs and a UI for
     exploring the APIs available.
