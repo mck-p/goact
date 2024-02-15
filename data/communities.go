@@ -89,3 +89,27 @@ func (messages *ICommunities) GetUserCommunities(query UserCommunitiesQuery) ([]
 
 	return list, nil
 }
+
+type ComminityByIdQuery struct {
+	Id string `json:"id"`
+}
+
+func (messages *ICommunities) GetCommunityById(query ComminityByIdQuery) (Community, error) {
+	sql := `
+		SELECT
+			communities._id as id,
+			communities.name as name,
+			communities.is_public as isPublic,
+			communities.created_at as created_at
+		FROM
+			communities
+		WHERE
+			communities._id = $1;
+	`
+
+	community := Community{}
+
+	row := connections.Database.QueryRow(sql, query.Id)
+
+	return community, row.Scan(&community.Id, &community.Name, &community.IsPublic, &community.CreatedAt)
+}

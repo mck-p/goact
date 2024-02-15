@@ -378,7 +378,7 @@ func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
 // @Failure	500	{object}	ErrorResponse[GenericError]
 // @Router		/api/v1/messages/groups [get]
 func (handlers *Handler) GetCommunities(c *fiber.Ctx) error {
-	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetrCommunities")
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunities")
 	defer span.End()
 	user := c.Locals("user").(*data.User)
 
@@ -391,6 +391,31 @@ func (handlers *Handler) GetCommunities(c *fiber.Ctx) error {
 	}
 
 	return JSONAPI(c, 200, communities)
+}
+
+// GetUserCommunityById	godoc
+//
+//	@Id			GetUserCommunityById
+//	@Summary	Retrieves the Community of a given ID
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[data.Community]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups [get]
+func (handlers *Handler) GetCommunityById(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunitiy")
+	defer span.End()
+
+	community, err := data.Communities.GetCommunityById(data.ComminityByIdQuery{
+		Id: c.Params("id"),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, community)
 }
 
 type MessageGroupRequest struct {

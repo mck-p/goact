@@ -40,7 +40,7 @@ const Title = () => {
         <Route path="/signin">{translations('title.signin')}</Route>
         <Route path="/messages">{translations('title.messages')}</Route>
         <Route path="/communities">{translations('title.communities')}</Route>
-        <Route path="/communities/create">
+        <Route path="/communities/:id">
           {translations('title.communities')}
         </Route>
 
@@ -108,7 +108,7 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             </Link>
           </>
         </Route>
-        <Route path="/communities/create">
+        <Route path="/communities/:id">
           <>
             <Link href="/dashboard">
               <Button>{translations('nav.buttons.dashboard.label')}</Button>
@@ -122,6 +122,7 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
           </>
         </Route>
       </Switch>
+
       <Link href="/signout" onClick={signOut}>
         <Button>{translations('nav.buttons.signout.label')}</Button>
       </Link>

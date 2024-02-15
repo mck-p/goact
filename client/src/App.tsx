@@ -32,7 +32,7 @@ const App = () => {
         <Route path="/messages" component={Messages} />
         <Route path="/communities" component={Communities.List} />
         <Route path="/communities/create" component={Communities.Create} />
-
+        <Route path="/communities/:id" component={Communities.Single} />
         <Route component={NotFound} />
       </Switch>
     </>

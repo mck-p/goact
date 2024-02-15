@@ -1,5 +1,6 @@
 import React from 'react'
 import styled from '@emotion/styled'
+import { navigate } from 'wouter/use-location'
 import {
   Button,
   Checkbox,
@@ -28,17 +29,19 @@ const Form = styled.form`
 
 const CreateCommunity = () => {
   const [createCommunitiy, createdCommunity] = useAddCommunityMutation()
-  const handleFormSubmit: React.FormEventHandler = (e) => {
+  const handleFormSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault()
     const formData = new FormData(e.target as any)
 
     const name = formData.get('name') as string
     const is_public = formData.get('public') === 'on'
 
-    createCommunitiy({
+    const result = await createCommunitiy({
       name,
       is_public,
-    })
+    }).unwrap()
+
+    navigate(`/communities/${result._id}`)
   }
 
   return (

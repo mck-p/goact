@@ -141,6 +141,11 @@ var communityRoutes = createPrefixedRoutes("communities", []Route{
 		Path:     "",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunities},
 	},
+	{
+		Method:   "get",
+		Path:     ":id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityById},
+	},
 })
 
 var apiRoutes = [][]Route{

@@ -1,18 +1,12 @@
 import React from 'react'
-import styled from '@emotion/styled'
+import { useSelector } from 'react-redux'
 import { Link } from 'wouter'
 import { useTranslation } from 'react-i18next'
-
 import { Button, Typography } from '@mui/material'
-import { useGetCommunitiesQuery } from '../../../state/domains/communities'
-import { useSelector } from 'react-redux'
-import { RootState } from '../../../state/store'
 
-const Page = styled.main`
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 5rem;
-`
+import { useGetCommunitiesQuery } from '../../../state/domains/communities'
+import { RootState } from '../../../state/store'
+import { Page, Communities, Community } from './components/styled'
 
 const ListCommunities = () => {
   const { data, error, isLoading, isFetching } = useGetCommunitiesQuery()
@@ -22,17 +16,20 @@ const ListCommunities = () => {
     return '...loading'
   }
 
-  console.log(data, error, isFetching)
-
   return (
     <Page>
       <Typography>{t('page.communities.list.title')}</Typography>
-      {data?.map(({ _id, name, is_public }) => (
-        <div key={_id}>
-          <Typography>{name}</Typography>
-          <Typography>Is public{is_public ? 'yes' : 'no'}</Typography>
-        </div>
-      ))}
+      <Communities>
+        {data?.map(({ _id, name, is_public }) => (
+          <Community key={_id}>
+            <Typography variant="h4">{name}</Typography>
+            <Typography>Is public {is_public ? 'yes' : 'no'}</Typography>
+            <Link href={`/communities/${_id}`}>
+              <Button variant="contained">See Community</Button>
+            </Link>
+          </Community>
+        ))}
+      </Communities>
       <Link href="/communities/create">
         <Button color="primary">Create New Community</Button>
       </Link>

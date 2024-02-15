@@ -28,6 +28,9 @@ export const communityApi = createApi({
           ? result.map(({ _id }) => ({ type: 'Communities', id: _id }))
           : ['Communities'],
     }),
+    getCommunityByID: build.query<Community, string>({
+      query: (id: string) => `/${id}`,
+    }),
     addCommunity: build.mutation<Community, Partial<Community>>({
       query(body) {
         return {
@@ -43,4 +46,8 @@ export const communityApi = createApi({
   }),
 })
 
-export const { useAddCommunityMutation, useGetCommunitiesQuery } = communityApi
+export const {
+  useAddCommunityMutation,
+  useGetCommunitiesQuery,
+  useGetCommunityByIDQuery,
+} = communityApi
