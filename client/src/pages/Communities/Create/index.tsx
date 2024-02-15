@@ -33,9 +33,12 @@ const CreateCommunity = () => {
     const formData = new FormData(e.target as any)
 
     const name = formData.get('name') as string
-    const checked = formData.get('public')
+    const is_public = formData.get('public') === 'on'
 
-    console.log(name, checked)
+    createCommunitiy({
+      name,
+      is_public,
+    })
   }
 
   return (

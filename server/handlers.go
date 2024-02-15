@@ -409,7 +409,8 @@ func (handlers *Handler) CreateMessageGroup(c *fiber.Ctx) error {
 }
 
 type CreateCommunityRequest struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	IsPublic bool   `json:"is_public"`
 }
 
 // @Id CreateCommunity
@@ -439,6 +440,7 @@ func (handlers *Handler) CreateCommunity(c *fiber.Ctx) error {
 
 	result, err := data.Communities.CreateCommunity(data.NewCommunity{
 		Name:      payload.Name,
+		IsPublic:  payload.IsPublic,
 		CreatorId: user.Id,
 	})
 

@@ -20,19 +20,21 @@ func createPrefixedRoutes(prefix string, routes []Route) []Route {
 	result := []Route{}
 
 	for _, route := range routes {
+		slog.Debug("Creating new route",
+			slog.String("route path", route.Path),
+			slog.String("route method", route.Method),
+		)
+
 		path := route.Path
 
 		if path != "" {
-			path = fmt.Sprintf("%s/%s", prefix, route.Path)
+
+			path = fmt.Sprintf("%s/%s", prefix, path)
 		} else {
 			path = prefix
 		}
 
-		slog.Debug("Help",
-			slog.String("path", path),
-			slog.String("prefix", prefix),
-			slog.Any("route", route.Path),
-		)
+		slog.Debug("Built path", slog.String("path", path))
 
 		result = append(result, Route{
 			Handlers: route.Handlers,
@@ -91,7 +93,7 @@ var weatherRoutes = createPrefixedRoutes("weather", []Route{
 var webhookRoutes = createPrefixedRoutes("webhooks", []Route{
 	{
 		Method:   "post",
-		Path:     "webhooks",
+		Path:     "",
 		Handlers: []fiber.Handler{Handlers.Webhook},
 	},
 })
@@ -128,10 +130,10 @@ var messageRoutes = createPrefixedRoutes("messaages", []Route{
 	},
 })
 
-var communityRoutes = createPrefixedRoutes("communites", []Route{
+var communityRoutes = createPrefixedRoutes("communities", []Route{
 	{
 		Method:   "post",
-		Path:     "communities",
+		Path:     "",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunity},
 	},
 })

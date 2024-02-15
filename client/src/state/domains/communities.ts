@@ -22,7 +22,7 @@ export const communityApi = createApi({
   }),
   endpoints: (build) => ({
     getCommunities: build.query<Community[], void>({
-      query: () => '/',
+      query: () => '',
       providesTags: (result) =>
         result
           ? result.map(({ _id }) => ({ type: 'Communities', id: _id }))

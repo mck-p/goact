@@ -11,6 +11,8 @@
 CREATE TABLE communities (
     _id UUID NOT NULL DEFAULT gen_random_uuid(),
     is_public BOOLEAN NOT NULL,
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (_id)
 );
 
