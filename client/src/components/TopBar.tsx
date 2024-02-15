@@ -1,5 +1,5 @@
 import React from 'react'
-import { Switch, Route, Link, useRouter } from 'wouter'
+import { Switch, Route, Link, useRouter, useParams } from 'wouter'
 import { useTranslation } from 'react-i18next'
 
 import AppBar from '@mui/material/AppBar'
@@ -12,6 +12,7 @@ import IconButton from '@mui/material/IconButton'
 import Avatar from '@mui/material/Avatar'
 
 import { SignedIn, SignedOut, useClerk, useUser } from '@clerk/clerk-react'
+import { useGetCommunityByIDQuery } from '../state/domains/communities'
 
 function HideOnScroll(props: any) {
   const { children } = props
@@ -28,6 +29,15 @@ function HideOnScroll(props: any) {
   )
 }
 
+const CommunityTitle = () => {
+  const params = useParams()
+  const { data } = useGetCommunityByIDQuery(params.id!)
+
+  if (data) {
+    return data.name
+  }
+}
+
 const Title = () => {
   const { t: translations } = useTranslation()
 
@@ -41,7 +51,7 @@ const Title = () => {
         <Route path="/messages">{translations('title.messages')}</Route>
         <Route path="/communities">{translations('title.communities')}</Route>
         <Route path="/communities/:id">
-          {translations('title.communities')}
+          <CommunityTitle />
         </Route>
 
         <Route>{translations('title.not-found')}</Route>
