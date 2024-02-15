@@ -10,13 +10,10 @@ export const messageApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: MESSAGE_ROOT_URL,
     prepareHeaders: (headers, { getState }) => {
-      console.log('I AM RUNNIN')
       const token = (getState() as any).auth.token
       // If we have a token set in state, let's assume that we should be passing it.
       if (token) {
         headers.set('authorization', `Bearer ${token}`)
-      } else {
-        console.log('NO TOKEN')
       }
 
       return headers

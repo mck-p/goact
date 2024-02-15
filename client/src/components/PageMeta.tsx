@@ -1,7 +1,21 @@
 import React from 'react'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
-import { Switch, Route } from 'wouter'
+import { Switch, Route, useParams } from 'wouter'
+import { useGetCommunityByIDQuery } from '../state/domains/communities'
+
+const CommunityTitle = () => {
+  const params = useParams()
+  const { data } = useGetCommunityByIDQuery(params.id!)
+
+  if (data) {
+    return (
+      <Helmet>
+        <title>{data.name} | Goact</title>
+      </Helmet>
+    )
+  }
+}
 
 const PageMeta = () => {
   const { t: translations } = useTranslation()
@@ -32,6 +46,14 @@ const PageMeta = () => {
         <Helmet>
           <title>{translations('title.messages')} | Goact</title>
         </Helmet>
+      </Route>
+      <Route path="/communities">
+        <Helmet>
+          <title>{translations('title.communities')} | Goact</title>
+        </Helmet>
+      </Route>
+      <Route path="/communities/:id">
+        <CommunityTitle />
       </Route>
     </Switch>
   )

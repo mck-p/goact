@@ -73,7 +73,9 @@ func JSONAPI(c *fiber.Ctx, status int, data interface{}) error {
 // @name						Authorization
 // @description					JWT for authentication. Inclue Bearer
 // @schema						Bearer
-func New() *Server {
+func New(
+	routes []Route,
+) *Server {
 	tracer.InitTracer()
 	app := fiber.New()
 

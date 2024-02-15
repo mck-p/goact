@@ -367,6 +367,57 @@ func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
 	return JSONAPI(c, 200, groups)
 }
 
+// GetUserCommunities	godoc
+//
+//	@Id			GetUserCommunities
+//	@Summary	Retrieves the Communities that a User has access to
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[GetGroupsResponse]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups [get]
+func (handlers *Handler) GetCommunities(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunities")
+	defer span.End()
+	user := c.Locals("user").(*data.User)
+
+	communities, err := data.Communities.GetUserCommunities(data.UserCommunitiesQuery{
+		UserId: user.Id,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, communities)
+}
+
+// GetUserCommunityById	godoc
+//
+//	@Id			GetUserCommunityById
+//	@Summary	Retrieves the Community of a given ID
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[data.Community]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/messages/groups [get]
+func (handlers *Handler) GetCommunityById(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunitiy")
+	defer span.End()
+
+	community, err := data.Communities.GetCommunityById(data.ComminityByIdQuery{
+		Id: c.Params("id"),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, community)
+}
+
 type MessageGroupRequest struct {
 	Name string `json:"name"`
 }
@@ -399,6 +450,49 @@ func (handlers *Handler) CreateMessageGroup(c *fiber.Ctx) error {
 	result, err := data.Messages.CreateGroup(data.CreateGroupCmd{
 		UserId:    user.Id,
 		GroupName: payload.Name,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, result)
+}
+
+type CreateCommunityRequest struct {
+	Name     string `json:"name"`
+	IsPublic bool   `json:"is_public"`
+}
+
+// @Id CreateCommunity
+// @Summary Creates a new Community
+// @Description This will create a new Community and assign the creator as the only memberof that community
+// @Tags Communities
+// @Accept json
+//
+//	@Produce	application/vnd.api+json
+//
+// @Param requestBody body CreateCommunityRequest true "New Community Information"
+//
+// @Success 200 {object} SuccessResponse[data.Community]
+// @Router /api/v1/communities [post]
+func (handlers *Handler) CreateCommunity(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateCommunity")
+	defer span.End()
+
+	user := c.Locals("user").(*data.User)
+
+	payload := CreateCommunityRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := data.Communities.CreateCommunity(data.NewCommunity{
+		Name:      payload.Name,
+		IsPublic:  payload.IsPublic,
+		CreatorId: user.Id,
 	})
 
 	if err != nil {

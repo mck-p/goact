@@ -1,5 +1,5 @@
 import React from 'react'
-import { Switch, Route, Link, useRouter } from 'wouter'
+import { Switch, Route, Link, useRouter, useParams } from 'wouter'
 import { useTranslation } from 'react-i18next'
 
 import AppBar from '@mui/material/AppBar'
@@ -12,6 +12,7 @@ import IconButton from '@mui/material/IconButton'
 import Avatar from '@mui/material/Avatar'
 
 import { SignedIn, SignedOut, useClerk, useUser } from '@clerk/clerk-react'
+import { useGetCommunityByIDQuery } from '../state/domains/communities'
 
 function HideOnScroll(props: any) {
   const { children } = props
@@ -28,6 +29,15 @@ function HideOnScroll(props: any) {
   )
 }
 
+const CommunityTitle = () => {
+  const params = useParams()
+  const { data } = useGetCommunityByIDQuery(params.id!)
+
+  if (data) {
+    return data.name
+  }
+}
+
 const Title = () => {
   const { t: translations } = useTranslation()
 
@@ -39,6 +49,11 @@ const Title = () => {
         <Route path="/signup">{translations('title.signup')}</Route>
         <Route path="/signin">{translations('title.signin')}</Route>
         <Route path="/messages">{translations('title.messages')}</Route>
+        <Route path="/communities">{translations('title.communities')}</Route>
+        <Route path="/communities/:id">
+          <CommunityTitle />
+        </Route>
+
         <Route>{translations('title.not-found')}</Route>
       </Switch>
     </Typography>
@@ -59,6 +74,9 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             <Link href="/messages">
               <Button>{translations('nav.buttons.messages.label')}</Button>
             </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
+            </Link>
           </>
         </Route>
         <Route path="/profile">
@@ -68,6 +86,9 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             </Link>
             <Link href="/messages">
               <Button>{translations('nav.buttons.messages.label')}</Button>
+            </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
             </Link>
           </>
         </Route>
@@ -79,9 +100,39 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
             <Link href="/profile">
               <Button>{translations('nav.buttons.profile.label')}</Button>
             </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
+            </Link>
+          </>
+        </Route>
+        <Route path="/communities">
+          <>
+            <Link href="/dashboard">
+              <Button>{translations('nav.buttons.dashboard.label')}</Button>
+            </Link>
+            <Link href="/profile">
+              <Button>{translations('nav.buttons.profile.label')}</Button>
+            </Link>
+            <Link href="/messages">
+              <Button>{translations('nav.buttons.messages.label')}</Button>
+            </Link>
+          </>
+        </Route>
+        <Route path="/communities/:id">
+          <>
+            <Link href="/dashboard">
+              <Button>{translations('nav.buttons.dashboard.label')}</Button>
+            </Link>
+            <Link href="/profile">
+              <Button>{translations('nav.buttons.profile.label')}</Button>
+            </Link>
+            <Link href="/communities">
+              <Button>{translations('nav.buttons.communities.label')}</Button>
+            </Link>
           </>
         </Route>
       </Switch>
+
       <Link href="/signout" onClick={signOut}>
         <Button>{translations('nav.buttons.signout.label')}</Button>
       </Link>

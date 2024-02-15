@@ -17,6 +17,17 @@ definitions:
       sunset:
         type: string
     type: object
+  data.Community:
+    properties:
+      _id:
+        type: string
+      created_at:
+        type: string
+      is_public:
+        type: boolean
+      name:
+        type: string
+    type: object
   data.CurrentWeatherUpstreamResponse:
     properties:
       cloud:
@@ -170,6 +181,13 @@ definitions:
       text:
         type: string
     type: object
+  server.CreateCommunityRequest:
+    properties:
+      is_public:
+        type: boolean
+      name:
+        type: string
+    type: object
   server.ErrorResponse-server_GenericError:
     properties:
       error:
@@ -242,6 +260,19 @@ definitions:
   server.SuccessResponse-any:
     properties:
       data: {}
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-data_Community:
+    properties:
+      data:
+        $ref: '#/definitions/data.Community'
       includes:
         items: {}
         type: array
@@ -359,23 +390,47 @@ paths:
       summary: Returns the health of the underlying system
       tags:
       - Internal
-  /api/v1/messages/groups:
-    get:
-      operationId: GetUserMessageGroups
+  /api/v1/communities:
+    post:
+      consumes:
+      - application/json
+      description: This will create a new Community and assign the creator as the
+        only memberof that community
+      operationId: CreateCommunity
+      parameters:
+      - description: New Community Information
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/server.CreateCommunityRequest'
       produces:
       - application/vnd.api+json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/server.SuccessResponse-server_GetGroupsResponse'
+            $ref: '#/definitions/server.SuccessResponse-data_Community'
+      summary: Creates a new Community
+      tags:
+      - Communities
+  /api/v1/messages/groups:
+    get:
+      operationId: GetUserCommunityById
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_Community'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.ErrorResponse-server_GenericError'
-      summary: Retrieves the Message Groups that a User has access to
+      summary: Retrieves the Community of a given ID
       tags:
-      - Messages
+      - Communities
     post:
       consumes:
       - application/json
