@@ -23,6 +23,8 @@ definitions:
         type: string
       created_at:
         type: string
+      is_public:
+        type: boolean
       name:
         type: string
     type: object
@@ -181,6 +183,8 @@ definitions:
     type: object
   server.CreateCommunityRequest:
     properties:
+      is_public:
+        type: boolean
       name:
         type: string
     type: object
@@ -412,21 +416,21 @@ paths:
       - Communities
   /api/v1/messages/groups:
     get:
-      operationId: GetUserMessageGroups
+      operationId: GetUserCommunityById
       produces:
       - application/vnd.api+json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/server.SuccessResponse-server_GetGroupsResponse'
+            $ref: '#/definitions/server.SuccessResponse-data_Community'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.ErrorResponse-server_GenericError'
-      summary: Retrieves the Message Groups that a User has access to
+      summary: Retrieves the Community of a given ID
       tags:
-      - Messages
+      - Communities
     post:
       consumes:
       - application/json

@@ -90,15 +90,15 @@ const docTemplate = `{
                     "application/vnd.api+json"
                 ],
                 "tags": [
-                    "Messages"
+                    "Communities"
                 ],
-                "summary": "Retrieves the Message Groups that a User has access to",
-                "operationId": "GetUserMessageGroups",
+                "summary": "Retrieves the Community of a given ID",
+                "operationId": "GetUserCommunityById",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/server.SuccessResponse-server_GetGroupsResponse"
+                            "$ref": "#/definitions/server.SuccessResponse-data_Community"
                         }
                     },
                     "500": {
@@ -374,6 +374,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "is_public": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 }
@@ -616,6 +619,9 @@ const docTemplate = `{
         "server.CreateCommunityRequest": {
             "type": "object",
             "properties": {
+                "is_public": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 }
