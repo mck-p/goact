@@ -50,6 +50,9 @@ const Title = () => {
         <Route path="/signin">{translations('title.signin')}</Route>
         <Route path="/messages">{translations('title.messages')}</Route>
         <Route path="/communities">{translations('title.communities')}</Route>
+        <Route path="/communities/create">
+          {translations('title.createCommunities')}
+        </Route>
         <Route path="/communities/:id">
           <CommunityTitle />
         </Route>

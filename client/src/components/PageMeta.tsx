@@ -52,6 +52,11 @@ const PageMeta = () => {
           <title>{translations('title.communities')} | Goact</title>
         </Helmet>
       </Route>
+      <Route path="/communities/create">
+        <Helmet>
+          <title>{translations('title.createCommunities')} | Goact</title>
+        </Helmet>
+      </Route>
       <Route path="/communities/:id">
         <CommunityTitle />
       </Route>

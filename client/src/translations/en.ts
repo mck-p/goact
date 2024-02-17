@@ -8,6 +8,7 @@ export default {
   ['title.signin']: 'Sign In',
   ['title.messages']: 'Messages',
   ['title.communities']: 'Communities',
+  ['title.createCommunities']: 'Create Community',
 
   ['title.not-found']: 'Not Found',
 

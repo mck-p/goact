@@ -28,7 +28,7 @@ const Form = styled.form`
 `
 
 const CreateCommunity = () => {
-  const [createCommunitiy, createdCommunity] = useAddCommunityMutation()
+  const [createCommunitiy] = useAddCommunityMutation()
   const handleFormSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault()
     const formData = new FormData(e.target as any)

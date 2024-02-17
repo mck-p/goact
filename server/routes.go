@@ -132,6 +132,21 @@ var messageRoutes = createPrefixedRoutes("messaages", []Route{
 
 var communityRoutes = createPrefixedRoutes("communities", []Route{
 	{
+		Method:   "get",
+		Path:     ":id/members",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityMembers},
+	},
+	{
+		Method:   "get",
+		Path:     ":id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityById},
+	},
+	{
+		Method:   "delete",
+		Path:     ":id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.DeleteCommunity},
+	},
+	{
 		Method:   "post",
 		Path:     "",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunity},
@@ -140,11 +155,6 @@ var communityRoutes = createPrefixedRoutes("communities", []Route{
 		Method:   "get",
 		Path:     "",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunities},
-	},
-	{
-		Method:   "get",
-		Path:     ":id",
-		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityById},
 	},
 })
 

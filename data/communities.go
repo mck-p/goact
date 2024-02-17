@@ -24,7 +24,7 @@ type NewCommunity struct {
 	Name      string `json:"name"`
 }
 
-func (messages *ICommunities) CreateCommunity(comm NewCommunity) (*Community, error) {
+func (communities *ICommunities) CreateCommunity(comm NewCommunity) (*Community, error) {
 	community := Community{}
 
 	sql := `
@@ -59,7 +59,7 @@ type UserCommunitiesQuery struct {
 	UserId string
 }
 
-func (messages *ICommunities) GetUserCommunities(query UserCommunitiesQuery) ([]Community, error) {
+func (communities *ICommunities) GetUserCommunities(query UserCommunitiesQuery) ([]Community, error) {
 	sql := `
 		SELECT
 			communities._id as id,
@@ -90,11 +90,49 @@ func (messages *ICommunities) GetUserCommunities(query UserCommunitiesQuery) ([]
 	return list, nil
 }
 
+type CommunityMembersQuery struct {
+	Id string
+}
+
+func (communities *ICommunities) GetCommunityMembers(query CommunityMembersQuery) ([]User, error) {
+	sql := `
+		SELECT
+			users._id as id,
+			users.name as name,
+			users.externalId as externalId,
+			users.avatarUrl as avatarUrl
+		FROM
+			communities
+		JOIN
+			community_members
+			ON community_members.community_id = communities._id
+		JOIN
+			users
+			ON users._id = community_members.user_id
+		WHERE
+			communities._id = $1;
+	`
+
+	rows, err := connections.Database.Query(sql, query.Id)
+
+	if err != nil {
+		return []User{}, err
+	}
+
+	list, err := pgx.CollectRows(rows, pgx.RowToStructByName[User])
+
+	if err != nil {
+		return []User{}, err
+	}
+
+	return list, nil
+}
+
 type ComminityByIdQuery struct {
 	Id string `json:"id"`
 }
 
-func (messages *ICommunities) GetCommunityById(query ComminityByIdQuery) (Community, error) {
+func (communities *ICommunities) GetCommunityById(query ComminityByIdQuery) (Community, error) {
 	sql := `
 		SELECT
 			communities._id as id,
@@ -112,4 +150,21 @@ func (messages *ICommunities) GetCommunityById(query ComminityByIdQuery) (Commun
 	row := connections.Database.QueryRow(sql, query.Id)
 
 	return community, row.Scan(&community.Id, &community.Name, &community.IsPublic, &community.CreatedAt)
+}
+
+type DeleteCommunityCommand struct {
+	Id string `json:"_id"`
+}
+
+func (communities *ICommunities) DeleteCommunity(cmd DeleteCommunityCommand) error {
+	sql := `
+		DELETE FROM
+			communities
+		WHERE
+			communities._id = $1
+	`
+
+	_, err := connections.Database.Exec(sql, cmd.Id)
+
+	return err
 }

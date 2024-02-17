@@ -9,7 +9,7 @@ import { RootState } from '../../../state/store'
 import { Page, Communities, Community } from './components/styled'
 
 const ListCommunities = () => {
-  const { data, error, isLoading, isFetching } = useGetCommunitiesQuery()
+  const { data, isLoading } = useGetCommunitiesQuery()
   const { t } = useTranslation()
 
   if (isLoading) {
