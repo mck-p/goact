@@ -22,6 +22,7 @@ export default {
   ['nav.buttons.signup.label']: 'Sign Up',
   ['nav.buttons.messages.label']: 'Messages',
   ['nav.buttons.communities.label']: 'Communities',
+  ['nav.buttons.backToCommunity.label']: 'Back To Community',
 
   /**
    * PAGE-LEVEL CONCERNS
@@ -38,6 +39,32 @@ export default {
    * TOP LEVEL AVATAR
    */
   ['page.avatar.alt']: 'Your Profile Picture',
+
+  /**
+   * Community Member Profile
+   */
+  ['page.communities.members.comfort-likes.title']: 'Comforting Things',
+  ['page.communities.members.comfort-likes.add']: 'What comforts you?',
+  ['page.communities.members.comfort-likes.add.label']: 'Comfort Item Name',
+  ['page.communities.members.comfort-likes.add.type.label']:
+    'Comfort Item Type',
+
+  ['page.communities.members.comfort-likes.add.food.label']: 'Food',
+  ['page.communities.members.comfort-likes.add.general.label']: 'General',
+
+  ['page.communities.members.comfort-likes.add.food.can-be-delivered.label']:
+    'Can this be delivered?',
+
+  ['page.communities.members.comfort-likes.add.food.from-specific-place.label']:
+    'Is this from a specific place?',
+
+  ['page.communities.members.comfort-likes.add.food.can-be-delivered.deliverOptions.label']:
+    'Where from? Comma, separated, list',
+  ['page.communities.members.comfort-likes.add.food.from-specific-place.options.label']:
+    'Where from? Comma, separated, list',
+
+  ['page.communities.members.comfort-likes.add.general.notes.label']:
+    'Helpful Notes',
 
   /**
    * WIDGETS

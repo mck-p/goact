@@ -132,6 +132,25 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "This will for realsies delete the communities and all related artifacts",
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Deletes a Community",
+                "operationId": "DeleteCommunity",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-any"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/communities/{id}/members": {
@@ -148,7 +167,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/server.SuccessResponse-array_data_User"
+                            "$ref": "#/definitions/server.SuccessResponse-array_data_CommunityMember"
                         }
                     },
                     "500": {
@@ -455,6 +474,21 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "data.CommunityMember": {
+            "type": "object",
+            "properties": {
+                "community": {
+                    "type": "string"
+                },
+                "member": {
+                    "type": "string"
+                },
+                "profile": {
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },
@@ -846,13 +880,13 @@ const docTemplate = `{
                 "metadata": {}
             }
         },
-        "server.SuccessResponse-array_data_User": {
+        "server.SuccessResponse-array_data_CommunityMember": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.User"
+                        "$ref": "#/definitions/data.CommunityMember"
                     }
                 },
                 "includes": {

@@ -2,7 +2,12 @@ import React from 'react'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
 import { Switch, Route, useParams } from 'wouter'
-import { useGetCommunityByIDQuery } from '../state/domains/communities'
+import {
+  CommunityMemberNameLens,
+  useGetCommunityByIDQuery,
+  useGetCommunityMemberQuery,
+} from '../state/domains/communities'
+import OnlyRenderWhenAuthenticated from './OnlyRenderWhenAuthenticated'
 
 const CommunityTitle = () => {
   const params = useParams()
@@ -12,6 +17,22 @@ const CommunityTitle = () => {
     return (
       <Helmet>
         <title>{data.name} | Goact</title>
+      </Helmet>
+    )
+  }
+}
+
+const CommunityMemberTitle = () => {
+  const params = useParams()
+  const { data } = useGetCommunityMemberQuery({
+    community: params.community_id!,
+    member: params.member_id!,
+  })
+
+  if (data) {
+    return (
+      <Helmet>
+        <title>{CommunityMemberNameLens.get(data)} | Goact</title>
       </Helmet>
     )
   }
@@ -58,7 +79,14 @@ const PageMeta = () => {
         </Helmet>
       </Route>
       <Route path="/communities/:id">
-        <CommunityTitle />
+        <OnlyRenderWhenAuthenticated>
+          <CommunityTitle />
+        </OnlyRenderWhenAuthenticated>
+      </Route>
+      <Route path="/communities/:community_id/:member_id">
+        <OnlyRenderWhenAuthenticated>
+          <CommunityMemberTitle />
+        </OnlyRenderWhenAuthenticated>
       </Route>
     </Switch>
   )

@@ -1,14 +1,10 @@
 import React from 'react'
 import { Box, Typography } from '@mui/material'
-import { useParams } from 'wouter'
+import { Link, useParams } from 'wouter'
 import { useSelector } from 'react-redux'
 import { navigate } from 'wouter/use-location'
 import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
 import Divider from '@mui/material/Divider'
-import ListItemText from '@mui/material/ListItemText'
-import ListItemAvatar from '@mui/material/ListItemAvatar'
-import Avatar from '@mui/material/Avatar'
 import Button from '@mui/material/Button'
 import Modal from '@mui/material/Modal'
 
@@ -16,12 +12,16 @@ import Log from '../../../log'
 import { RootState } from '../../../state/store'
 
 import {
+  CommunityIdLens,
+  CommunityMemberIdLens,
+  CommunityNameLens,
   useDetleteCommunityMutation,
   useGetCommunityByIDQuery,
   useGetCommunityMembersQuery,
 } from '../../../state/domains/communities'
 
 import { Page } from './components/styled'
+import MemberListItem from './components/MemberListItem'
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -76,19 +76,11 @@ const SingleCommunity = () => {
   return (
     <Page>
       <Typography variant="h2" gutterBottom align="center">
-        {community.name}
+        {CommunityNameLens.get(community)}
       </Typography>
       <List>
         {members?.map((member, i) => (
-          <>
-            <ListItem key={member._id}>
-              <ListItemAvatar>
-                <Avatar alt={member.name} src={member.avatarUrl} />
-              </ListItemAvatar>
-              <ListItemText primary={member.name} />
-            </ListItem>
-            {i === members.length - 1 ? null : <Divider />}
-          </>
+          <MemberListItem key={i} member={member} />
         ))}
       </List>
       <Button color="secondary" onClick={handleOpen}>

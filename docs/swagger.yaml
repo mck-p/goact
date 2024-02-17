@@ -28,6 +28,16 @@ definitions:
       name:
         type: string
     type: object
+  data.CommunityMember:
+    properties:
+      community:
+        type: string
+      member:
+        type: string
+      profile:
+        additionalProperties: true
+        type: object
+    type: object
   data.CurrentWeatherUpstreamResponse:
     properties:
       cloud:
@@ -284,11 +294,11 @@ definitions:
         type: object
       metadata: {}
     type: object
-  server.SuccessResponse-array_data_User:
+  server.SuccessResponse-array_data_CommunityMember:
     properties:
       data:
         items:
-          $ref: '#/definitions/data.User'
+          $ref: '#/definitions/data.CommunityMember'
         type: array
       includes:
         items: {}
@@ -461,6 +471,19 @@ paths:
       tags:
       - Communities
   /api/v1/communities/{id}:
+    delete:
+      description: This will for realsies delete the communities and all related artifacts
+      operationId: DeleteCommunity
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-any'
+      summary: Deletes a Community
+      tags:
+      - Communities
     get:
       operationId: GetUserCommunityById
       produces:
@@ -486,7 +509,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/server.SuccessResponse-array_data_User'
+            $ref: '#/definitions/server.SuccessResponse-array_data_CommunityMember'
         "500":
           description: Internal Server Error
           schema:

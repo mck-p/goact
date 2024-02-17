@@ -14,6 +14,14 @@ type Community struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type CommunityMember struct {
+	Community  string                 `json:"community"`
+	Member     string                 `json:"member"`
+	UserName   string                 `json:"user_name"`
+	UserAvatar string                 `json:"user_avatar"`
+	Profile    map[string]interface{} `json:"profile"`
+}
+
 type ICommunities struct{}
 
 var Communities = &ICommunities{}
@@ -94,13 +102,14 @@ type CommunityMembersQuery struct {
 	Id string
 }
 
-func (communities *ICommunities) GetCommunityMembers(query CommunityMembersQuery) ([]User, error) {
+func (communities *ICommunities) GetCommunityMembers(query CommunityMembersQuery) ([]CommunityMember, error) {
 	sql := `
 		SELECT
-			users._id as id,
-			users.name as name,
-			users.externalId as externalId,
-			users.avatarUrl as avatarUrl
+			community_members.community_id as community,
+			community_members.user_id as member,
+			community_members.profile as profile,
+			users.name as userName,
+			users.avatarUrl as userAvatar
 		FROM
 			communities
 		JOIN
@@ -108,7 +117,7 @@ func (communities *ICommunities) GetCommunityMembers(query CommunityMembersQuery
 			ON community_members.community_id = communities._id
 		JOIN
 			users
-			ON users._id = community_members.user_id
+			ON community_members.user_id = users._id
 		WHERE
 			communities._id = $1;
 	`
@@ -116,16 +125,56 @@ func (communities *ICommunities) GetCommunityMembers(query CommunityMembersQuery
 	rows, err := connections.Database.Query(sql, query.Id)
 
 	if err != nil {
-		return []User{}, err
+		return []CommunityMember{}, err
 	}
 
-	list, err := pgx.CollectRows(rows, pgx.RowToStructByName[User])
+	list, err := pgx.CollectRows(rows, pgx.RowToStructByName[CommunityMember])
 
 	if err != nil {
-		return []User{}, err
+		return []CommunityMember{}, err
 	}
 
 	return list, nil
+}
+
+type CommunityMemberQuery struct {
+	Id       string `json:"id"`
+	MemberId string `json:"member_id"`
+}
+
+func (communities *ICommunities) GetCommunityMember(query CommunityMemberQuery) (CommunityMember, error) {
+	sql := `
+		SELECT
+			community_members.community_id as community,
+			community_members.user_id as member,
+			community_members.profile as profile,
+			users.name as userName,
+			users.avatarUrl as userAvatar
+		FROM
+			communities
+		JOIN
+			community_members
+			ON community_members.community_id = communities._id
+		JOIN
+			users
+			ON community_members.user_id = users._id
+		WHERE
+			communities._id = $1
+		AND
+			users._id = $2;
+	`
+
+	row := connections.Database.QueryRow(sql, query.Id, query.MemberId)
+
+	communityMember := CommunityMember{}
+
+	return communityMember, row.Scan(
+		&communityMember.Community,
+		&communityMember.Member,
+		&communityMember.Profile,
+		&communityMember.UserName,
+		&communityMember.UserAvatar,
+	)
 }
 
 type ComminityByIdQuery struct {

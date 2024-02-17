@@ -12,7 +12,12 @@ import IconButton from '@mui/material/IconButton'
 import Avatar from '@mui/material/Avatar'
 
 import { SignedIn, SignedOut, useClerk, useUser } from '@clerk/clerk-react'
-import { useGetCommunityByIDQuery } from '../state/domains/communities'
+import {
+  CommunityMemberNameLens,
+  useGetCommunityByIDQuery,
+  useGetCommunityMemberQuery,
+} from '../state/domains/communities'
+import OnlyRenderWhenAuthenticated from './OnlyRenderWhenAuthenticated'
 
 function HideOnScroll(props: any) {
   const { children } = props
@@ -38,6 +43,19 @@ const CommunityTitle = () => {
   }
 }
 
+const CommunityMemberTitle = () => {
+  const params = useParams()
+
+  const { data } = useGetCommunityMemberQuery({
+    community: params.community_id!,
+    member: params.member_id!,
+  })
+
+  if (data) {
+    return CommunityMemberNameLens.get(data)
+  }
+}
+
 const Title = () => {
   const { t: translations } = useTranslation()
 
@@ -53,13 +71,38 @@ const Title = () => {
         <Route path="/communities/create">
           {translations('title.createCommunities')}
         </Route>
+        <Route path="/communities/:community_id/members/:member_id">
+          <OnlyRenderWhenAuthenticated>
+            <CommunityMemberTitle />
+          </OnlyRenderWhenAuthenticated>
+        </Route>
         <Route path="/communities/:id">
-          <CommunityTitle />
+          <OnlyRenderWhenAuthenticated>
+            <CommunityTitle />
+          </OnlyRenderWhenAuthenticated>
         </Route>
 
         <Route>{translations('title.not-found')}</Route>
       </Switch>
     </Typography>
+  )
+}
+
+const CommunityMemberLinks = () => {
+  const { t: translations } = useTranslation()
+  const params = useParams()
+  return (
+    <>
+      <Link href="/dashboard">
+        <Button>{translations('nav.buttons.dashboard.label')}</Button>
+      </Link>
+      <Link href="/profile">
+        <Button>{translations('nav.buttons.profile.label')}</Button>
+      </Link>
+      <Link href={`/communities/${params.community_id!}`}>
+        <Button>{translations('nav.buttons.backToCommunity.label')}</Button>
+      </Link>
+    </>
   )
 }
 
@@ -133,6 +176,9 @@ const SignedInButtons = ({ signOut }: { signOut: () => void }) => {
               <Button>{translations('nav.buttons.communities.label')}</Button>
             </Link>
           </>
+        </Route>
+        <Route path="/communities/:community_id/members/:member_id">
+          <CommunityMemberLinks />
         </Route>
       </Switch>
 

@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
@@ -20,11 +19,6 @@ func createPrefixedRoutes(prefix string, routes []Route) []Route {
 	result := []Route{}
 
 	for _, route := range routes {
-		slog.Debug("Creating new route",
-			slog.String("route path", route.Path),
-			slog.String("route method", route.Method),
-		)
-
 		path := route.Path
 
 		if path != "" {
@@ -33,8 +27,6 @@ func createPrefixedRoutes(prefix string, routes []Route) []Route {
 		} else {
 			path = prefix
 		}
-
-		slog.Debug("Built path", slog.String("path", path))
 
 		result = append(result, Route{
 			Handlers: route.Handlers,
@@ -131,6 +123,11 @@ var messageRoutes = createPrefixedRoutes("messaages", []Route{
 })
 
 var communityRoutes = createPrefixedRoutes("communities", []Route{
+	{
+		Method:   "get",
+		Path:     ":id/members/:member_id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityMember},
+	},
 	{
 		Method:   "get",
 		Path:     ":id/members",

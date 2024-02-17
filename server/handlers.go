@@ -464,7 +464,7 @@ func (handlers *Handler) GetCommunityById(c *fiber.Ctx) error {
 //	@Tags		Communities
 //	@Produce	application/vnd.api+json
 //
-// @Success	200	{object}	SuccessResponse[[]data.User]
+// @Success	200	{object}	SuccessResponse[[]data.CommunityMember]
 // @Failure	500	{object}	ErrorResponse[GenericError]
 // @Router		/api/v1/communities/{id}/members [get]
 func (handlers *Handler) GetCommunityMembers(c *fiber.Ctx) error {
@@ -488,6 +488,48 @@ func (handlers *Handler) GetCommunityMembers(c *fiber.Ctx) error {
 
 	members, err := data.Communities.GetCommunityMembers(data.CommunityMembersQuery{
 		Id: communityId,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, members)
+}
+
+// GetCommunityMember	godoc
+//
+//	@Id			GetCommunityMember
+//	@Summary	Retrieves the Community of a given ID by their Member ID
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[data.CommunityMember]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/communities/{id}/members/{member_id} [get]
+func (handlers *Handler) GetCommunityMember(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunitiyMembers")
+	defer span.End()
+	communityId := c.Params("id")
+	memberId := c.Params("member_id")
+
+	user := c.Locals("user").(*data.User)
+
+	canGetCommunityMember := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s::member::%s", communityId, memberId),
+		"getMembers",
+	)
+
+	if !canGetCommunityMember {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	members, err := data.Communities.GetCommunityMember(data.CommunityMemberQuery{
+		Id:       communityId,
+		MemberId: memberId,
 	})
 
 	if err != nil {
