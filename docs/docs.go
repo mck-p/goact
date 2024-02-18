@@ -108,6 +108,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/communities/{community_id}/members/{member_id}/profile": {
+            "put": {
+                "description": "This will create a new Community and assign the creator as the only memberof that community",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Creates a new Community",
+                "operationId": "CreateCommunity",
+                "parameters": [
+                    {
+                        "description": "New Community Information",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.UpdateCommunityMemberProfile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_Community"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/communities/{id}": {
             "get": {
                 "produces": [
@@ -168,6 +203,32 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/server.SuccessResponse-array_data_CommunityMember"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/communities/{id}/members/{member_id}": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Retrieves the Community of a given ID by their Member ID",
+                "operationId": "GetCommunityMember",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_CommunityMember"
                         }
                     },
                     "500": {
@@ -489,6 +550,12 @@ const docTemplate = `{
                 "profile": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "user_avatar": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
                 }
             }
         },
@@ -921,6 +988,25 @@ const docTemplate = `{
                 "metadata": {}
             }
         },
+        "server.SuccessResponse-data_CommunityMember": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data.CommunityMember"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
         "server.SuccessResponse-data_ForecastQueryUpstreamResponse": {
             "type": "object",
             "properties": {
@@ -1033,6 +1119,15 @@ const docTemplate = `{
                     }
                 },
                 "metadata": {}
+            }
+        },
+        "server.UpdateCommunityMemberProfile": {
+            "type": "object",
+            "properties": {
+                "profile": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
             }
         }
     },

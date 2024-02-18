@@ -121,8 +121,12 @@ var messageRoutes = createPrefixedRoutes("messaages", []Route{
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateMessageGroup},
 	},
 })
-
 var communityRoutes = createPrefixedRoutes("communities", []Route{
+	{
+		Method:   "put",
+		Path:     ":community_id/members/:member_id/profile",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.UpdateCommunityMemberProfile},
+	},
 	{
 		Method:   "get",
 		Path:     ":id/members/:member_id",

@@ -9,16 +9,7 @@ import {
   ListItemIcon,
   ListItemText,
   Button,
-  Box,
-  Modal,
-  Paper,
-  TextField,
-  Select,
-  FormControl,
-  InputLabel,
-  MenuItem,
 } from '@mui/material'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 
 import useUser from '../../../../hooks/useuser'
 import {
@@ -31,6 +22,7 @@ import NewComfortItemModal from './NewComfortItemModal'
 interface Props {
   items: ComfortItem[]
   memberId: string
+  setNewItems: (cb: (oldItems: ComfortItem[]) => ComfortItem[]) => void
 }
 
 const modalStyle = {
@@ -43,10 +35,19 @@ const modalStyle = {
 }
 
 const parseGeneralData = (formData: FormData) => {
-  const type = formData.get('type') as string
+  const type = formData.get('type') as string as COMFORT_ITEM_TYPE
   const notes = formData.get('notes') as string
   const title = formData.get('title') as string
 
+  return {
+    type,
+    notes,
+    title,
+  }
+}
+
+const parseFoodData = (formData: FormData) => {
+  const generalData = parseGeneralData(formData)
   const canBeDelivered = formData.get('canBeDelivered') === 'true'
   const deliveryOptions = (formData.get('deliveryOptions') as string)
     ?.split(',')
@@ -60,9 +61,7 @@ const parseGeneralData = (formData: FormData) => {
     .filter(Boolean)
 
   return {
-    type,
-    notes,
-    title,
+    ...generalData,
     canBeDelivered,
     deliveryOptions,
     fromSpecificPlace,
@@ -70,20 +69,13 @@ const parseGeneralData = (formData: FormData) => {
   }
 }
 
-const parseFoodData = (formData: FormData) => {
-  const generalData = parseGeneralData(formData)
-
-  return {
-    ...generalData,
-  }
-}
-
-const ComfortList = ({ items, memberId }: Props) => {
+const ComfortList = ({ items, memberId, setNewItems }: Props) => {
   const { user } = useUser()
   const { t: translations } = useTranslation()
   const [open, setOpen] = React.useState(false)
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+
   const handleSubmit: React.FormEventHandler = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target as any)
@@ -91,14 +83,18 @@ const ComfortList = ({ items, memberId }: Props) => {
     const type = formData.get('type') as COMFORT_ITEM_TYPE
 
     if (type === COMFORT_ITEM_TYPE.GENERAL) {
-      const form = parseGeneralData(formData)
-      console.dir(form)
+      const form: ComfortItem = parseGeneralData(formData)
+
+      setNewItems((oldItems) => [...oldItems, form])
     }
 
     if (type === COMFORT_ITEM_TYPE.FOOD) {
-      const form = parseFoodData(formData)
-      console.dir(form)
+      const form: ComfortItem = parseFoodData(formData)
+
+      setNewItems((oldItems) => [...oldItems, form])
     }
+
+    handleClose()
   }
 
   return (
@@ -118,7 +114,7 @@ const ComfortList = ({ items, memberId }: Props) => {
           <ListItemIcon>
             <ComfortItemIcon type={comfort.type} />
           </ListItemIcon>
-          <ListItemText primary={comfort.title} />
+          <ListItemText primary={comfort.title} secondary={comfort.notes} />
         </ListItemButton>
       ))}
       {user?.id === memberId ? (

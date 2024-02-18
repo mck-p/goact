@@ -37,6 +37,10 @@ definitions:
       profile:
         additionalProperties: true
         type: object
+      user_avatar:
+        type: string
+      user_name:
+        type: string
     type: object
   data.CurrentWeatherUpstreamResponse:
     properties:
@@ -322,6 +326,19 @@ definitions:
         type: object
       metadata: {}
     type: object
+  server.SuccessResponse-data_CommunityMember:
+    properties:
+      data:
+        $ref: '#/definitions/data.CommunityMember'
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
   server.SuccessResponse-data_ForecastQueryUpstreamResponse:
     properties:
       data:
@@ -400,6 +417,12 @@ definitions:
         type: object
       metadata: {}
     type: object
+  server.UpdateCommunityMemberProfile:
+    properties:
+      profile:
+        additionalProperties: true
+        type: object
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -470,6 +493,30 @@ paths:
       summary: Creates a new Community
       tags:
       - Communities
+  /api/v1/communities/{community_id}/members/{member_id}/profile:
+    put:
+      consumes:
+      - application/json
+      description: This will create a new Community and assign the creator as the
+        only memberof that community
+      operationId: CreateCommunity
+      parameters:
+      - description: New Community Information
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/server.UpdateCommunityMemberProfile'
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_Community'
+      summary: Creates a new Community
+      tags:
+      - Communities
   /api/v1/communities/{id}:
     delete:
       description: This will for realsies delete the communities and all related artifacts
@@ -515,6 +562,23 @@ paths:
           schema:
             $ref: '#/definitions/server.ErrorResponse-server_GenericError'
       summary: Retrieves the Community of a given ID
+      tags:
+      - Communities
+  /api/v1/communities/{id}/members/{member_id}:
+    get:
+      operationId: GetCommunityMember
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_CommunityMember'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      summary: Retrieves the Community of a given ID by their Member ID
       tags:
       - Communities
   /api/v1/messages/groups:

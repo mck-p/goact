@@ -177,6 +177,33 @@ func (communities *ICommunities) GetCommunityMember(query CommunityMemberQuery) 
 	)
 }
 
+type UpdateCommunityMemberProfileCmd struct {
+	CommunityId string                 `json:"community_id"`
+	MemberId    string                 `json:"memvbr_id"`
+	Profile     map[string]interface{} `json:"profile"`
+}
+
+func (communities *ICommunities) UpdateCommunityMemberProfile(cmd UpdateCommunityMemberProfileCmd) (CommunityMember, error) {
+	sql := `
+		UPDATE community_members
+			SET profile = $3
+		WHERE
+			community_members.community_id = $1
+			AND community_members.user_id = $2;
+	`
+
+	_, err := connections.Database.Exec(sql, cmd.CommunityId, cmd.MemberId, cmd.Profile)
+
+	if err != nil {
+		return CommunityMember{}, err
+	}
+
+	return communities.GetCommunityMember(CommunityMemberQuery{
+		Id:       cmd.CommunityId,
+		MemberId: cmd.MemberId,
+	})
+}
+
 type ComminityByIdQuery struct {
 	Id string `json:"id"`
 }

@@ -647,6 +647,61 @@ func (handlers *Handler) CreateCommunity(c *fiber.Ctx) error {
 	return JSONAPI(c, 201, result)
 }
 
+type UpdateCommunityMemberProfile struct {
+	Profile map[string]interface{} `json:"profile"`
+}
+
+// @Id CreateCommunity
+// @Summary Creates a new Community
+// @Description This will create a new Community and assign the creator as the only memberof that community
+// @Tags Communities
+// @Accept json
+//
+//	@Produce	application/vnd.api+json
+//
+// @Param requestBody body UpdateCommunityMemberProfile true "New Community Information"
+//
+// @Success 200 {object} SuccessResponse[data.Community]
+// @Router /api/v1/communities/{community_id}/members/{member_id}/profile [put]
+func (handlers *Handler) UpdateCommunityMemberProfile(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::UpdateCommunityMemberProfile")
+	defer span.End()
+	communityId := c.Params("community_id")
+	memberId := c.Params("member_id")
+	user := c.Locals("user").(*data.User)
+
+	canUpdateCommunityMemberProfile := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s::member::%s", communityId, memberId),
+		"update",
+	)
+
+	if !canUpdateCommunityMemberProfile {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	payload := UpdateCommunityMemberProfile{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := data.Communities.UpdateCommunityMemberProfile(data.UpdateCommunityMemberProfileCmd{
+		CommunityId: communityId,
+		MemberId:    memberId,
+		Profile:     payload.Profile,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, result)
+}
+
 // @Id DeleteCommunity
 // @Summary Deletes a Community
 // @Description This will for realsies delete the communities and all related artifacts

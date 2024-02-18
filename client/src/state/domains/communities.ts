@@ -15,8 +15,11 @@ export enum COMFORT_ITEM_TYPE {
 export interface ComfortItem {
   type: COMFORT_ITEM_TYPE
   title: string
-  url?: string
   notes?: string
+  canBeDelivered?: boolean
+  deliveryOptions?: string[]
+  fromSpecificPlace?: boolean
+  specificPlace?: string[]
 }
 
 export interface CommunityMemberProfile {
@@ -149,6 +152,29 @@ export const communityApi = createApi({
       },
       invalidatesTags: ['Communities'],
     }),
+    updateCommunityMemberProfile: build.mutation<
+      CommunityMember,
+      CommunityMemberProfile & { communityId: string; memberId: string }
+    >({
+      query({ communityId, memberId, ...profile }) {
+        return {
+          url: `/${communityId}/members/${memberId}/profile`,
+          method: 'PUT',
+          body: {
+            profile,
+          },
+        }
+      },
+      invalidatesTags: (result) =>
+        result
+          ? [
+              {
+                type: 'CommunityMembers',
+                id: `${result.community}::${result.member}`,
+              },
+            ]
+          : ['CommunityMembers'],
+    }),
     detleteCommunity: build.mutation<unknown, string>({
       query(id) {
         return {
@@ -168,4 +194,5 @@ export const {
   useGetCommunityMembersQuery,
   useDetleteCommunityMutation,
   useGetCommunityMemberQuery,
+  useUpdateCommunityMemberProfileMutation,
 } = communityApi
