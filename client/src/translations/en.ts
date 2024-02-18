@@ -44,6 +44,8 @@ export default {
    * Community Member Profile
    */
   ['page.communities.members.comfort-likes.title']: 'Comforting Things',
+  ['page.communities.members.comfort-likes.delete.label']: 'Delete',
+
   ['page.communities.members.comfort-likes.add']: 'What comforts you?',
   ['page.communities.members.comfort-likes.add.label']: 'Comfort Item Name',
   ['page.communities.members.comfort-likes.add.type.label']:

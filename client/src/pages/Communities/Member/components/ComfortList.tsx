@@ -9,7 +9,10 @@ import {
   ListItemIcon,
   ListItemText,
   Button,
+  ListItem,
+  IconButton,
 } from '@mui/material'
+import DeleteIcon from '@mui/icons-material/Delete'
 
 import useUser from '../../../../hooks/useuser'
 import {
@@ -23,15 +26,6 @@ interface Props {
   items: ComfortItem[]
   memberId: string
   setNewItems: (cb: (oldItems: ComfortItem[]) => ComfortItem[]) => void
-}
-
-const modalStyle = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  border: '2px solid #000',
 }
 
 const parseGeneralData = (formData: FormData) => {
@@ -110,17 +104,43 @@ const ComfortList = ({ items, memberId, setNewItems }: Props) => {
       }
     >
       {items.map((comfort, i) => (
-        <ListItemButton>
+        <ListItem
+          secondaryAction={
+            user?.id === memberId ? (
+              <IconButton
+                onClick={() =>
+                  setNewItems((oldItems) =>
+                    oldItems.filter((item) => {
+                      if (item === comfort) {
+                        return false
+                      }
+
+                      return true
+                    }),
+                  )
+                }
+                edge="end"
+                aria-label="delete"
+                color="warning"
+                title={translations(
+                  'page.communities.members.comfort-likes.delete.label',
+                )}
+              >
+                <DeleteIcon />
+              </IconButton>
+            ) : undefined
+          }
+        >
           <ListItemIcon>
             <ComfortItemIcon type={comfort.type} />
           </ListItemIcon>
           <ListItemText primary={comfort.title} secondary={comfort.notes} />
-        </ListItemButton>
+        </ListItem>
       ))}
       {user?.id === memberId ? (
         <>
           <Button
-            color="secondary"
+            color="primary"
             fullWidth
             variant="contained"
             onClick={handleOpen}
