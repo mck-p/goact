@@ -26,6 +26,11 @@ export interface CommunityMemberProfile {
   avatar?: string
   name?: string
   comfortItems?: ComfortItem[]
+  birthday?: string
+  anniversary?: string
+  address?: string
+  phoneNumber?: string
+  email?: string
 }
 
 export interface CommunityMember {
@@ -56,6 +61,26 @@ export const CommunityMemberProfileNameLens = CommunityMemberProfile.compose(
 
 export const CommunityMemberProfileAvatarLens = CommunityMemberProfile.compose(
   Lens.fromProp<CommunityMemberProfile>()('avatar'),
+)
+
+export const CommunityMemberBirthdayLens = CommunityMemberLens(
+  'profile',
+).compose(Lens.fromProp<CommunityMemberProfile>()('birthday'))
+
+export const CommunityMemberAnniversaryLens = CommunityMemberLens(
+  'profile',
+).compose(Lens.fromProp<CommunityMemberProfile>()('anniversary'))
+
+export const CommunityMemberAddressLens = CommunityMemberLens(
+  'profile',
+).compose(Lens.fromProp<CommunityMemberProfile>()('address'))
+
+export const CommunityMemberPhoneNumberLens = CommunityMemberLens(
+  'profile',
+).compose(Lens.fromProp<CommunityMemberProfile>()('phoneNumber'))
+
+export const CommunityMemberEmailLens = CommunityMemberLens('profile').compose(
+  Lens.fromProp<CommunityMemberProfile>()('email'),
 )
 
 export const CommunityMemberNameLens = new Lens<CommunityMember, string>(

@@ -16,6 +16,7 @@ func (connections *Connection) Connect(ctx context.Context) {
 
 	slog.Debug("Connections connecting")
 
+	Storage.Connect(ctx)
 	Cache.Connect(ctx)
 	Database.Connect(ctx)
 	Subscriptions.Connect(ctx)
@@ -32,6 +33,7 @@ func (connections *Connection) Disconnect(ctx context.Context) {
 	Subscriptions.Disconnect(ctx)
 	Database.Disconnect(ctx)
 	Cache.Disconnect(ctx)
+	Storage.Disconnect(ctx)
 
 	slog.Debug("Connections disconnected")
 }

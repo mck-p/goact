@@ -3,6 +3,7 @@ import Router from './router'
 import Auth from './auth'
 import Theme from './theme'
 import ReduxWebSocket from './reduxWebsocket'
+import Date from './Date'
 
 import Catch from '../errors/Catch'
 import State from '../state/provider'
@@ -25,11 +26,13 @@ const Global = ({ children }: { children: React.ReactElement }) => (
     >
       <Auth>
         <State>
-          <ReduxWebSocket>
-            <Theme>
-              <Router>{children}</Router>
-            </Theme>
-          </ReduxWebSocket>
+          <Date>
+            <ReduxWebSocket>
+              <Theme>
+                <Router>{children}</Router>
+              </Theme>
+            </ReduxWebSocket>
+          </Date>
         </State>
       </Auth>
     </Catch>

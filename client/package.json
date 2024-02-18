@@ -63,5 +63,10 @@
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1",
     "wouter": "^2.12.1"
+  },
+  "dependencies": {
+    "@mui/x-date-pickers": "^6.19.4",
+    "@uidotdev/usehooks": "^2.4.1",
+    "dayjs": "^1.11.10"
   }
 }

@@ -742,6 +742,92 @@ func (handlers *Handler) DeleteCommunity(c *fiber.Ctx) error {
 	return JSONAPI(c, 200, fiber.Map{})
 }
 
+type CommuntiyMemberProfileAvatarRequest struct {
+	Filename string `json:"filename"`
+}
+
+func (handlers *Handler) CreateCommunityMemberProfileAvatarUploadURL(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateCommunityMemberProfileAvatarUploadURL")
+	defer span.End()
+
+	communityId := c.Params("community_id")
+	memberId := c.Params("member_id")
+
+	user := c.Locals("user").(*data.User)
+
+	canUpdateCommunityMemberAvatar := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("group::%s::member::%s", communityId, memberId),
+		"updateProfile",
+	)
+
+	if !canUpdateCommunityMemberAvatar {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	payload := CommuntiyMemberProfileAvatarRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	url, err := data.Files.GetAvatarSaveURL(payload.Filename)
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, fiber.Map{
+		"url": url,
+	})
+}
+
+type CommuntiyMemberProfileAvatarReadRequest struct {
+	Filename string `json:"filename"`
+}
+
+func (handlers *Handler) CreateCommunityMemberProfileAvatarReadURL(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateCommunityMemberProfileAvatarReadURL")
+	defer span.End()
+
+	communityId := c.Params("community_id")
+	memberId := c.Params("member_id")
+
+	user := c.Locals("user").(*data.User)
+
+	canReadMemberProfileAvatarURL := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("group::%s::member::%s", communityId, memberId),
+		"readProfile",
+	)
+
+	if !canReadMemberProfileAvatarURL {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	payload := CommuntiyMemberProfileAvatarReadRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	url, err := data.Files.GetAvatarReadURL(payload.Filename)
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, fiber.Map{
+		"url": url,
+	})
+}
+
 type WebsocketMessage struct {
 	Id       string            `json:"id"`
 	Action   string            `json:"action"`

@@ -43,6 +43,19 @@ export default {
   /**
    * Community Member Profile
    */
+  ['page.communities.members.avatar.update.label']: 'Update Avatar',
+  ['page.communities.members.avatar.update.tabs.label']:
+    'Select Avatar Update Method',
+  ['page.communities.members.avatar.update.button.label']:
+    'Update Community Avatar',
+
+  ['page.communities.members.name.label']: 'Name',
+  ['page.communities.members.birthday.label']: 'Birthday',
+  ['page.communities.members.anniversary.label']: 'Anniversary',
+  ['page.communities.members.address.label']: 'Anniversary',
+  ['page.communities.members.phone-number.label']: 'Phone Number',
+  ['page.communities.members.email.label']: 'Phone Number',
+
   ['page.communities.members.comfort-likes.title']: 'Comforting Things',
   ['page.communities.members.comfort-likes.delete.label']: 'Delete',
 

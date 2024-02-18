@@ -2,6 +2,7 @@ package data
 
 import (
 	"mck-p/goact/connections"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -168,13 +169,47 @@ func (communities *ICommunities) GetCommunityMember(query CommunityMemberQuery) 
 
 	communityMember := CommunityMember{}
 
-	return communityMember, row.Scan(
+	err := row.Scan(
 		&communityMember.Community,
 		&communityMember.Member,
 		&communityMember.Profile,
 		&communityMember.UserName,
 		&communityMember.UserAvatar,
 	)
+
+	if err != nil {
+		return communityMember, err
+	}
+
+	communityMember.Profile = communities.setProfileImageURL(communityMember.Profile)
+
+	return communityMember, nil
+}
+
+func (communities *ICommunities) setProfileImageURL(profile map[string]interface{}) map[string]interface{} {
+	avatar := profile["avatar"]
+	var avatarURL string
+	if avatar == nil {
+		return profile
+	} else {
+		avatarURL = avatar.(string)
+	}
+
+	if avatar != "" {
+		split := strings.Split(avatarURL, "/")
+
+		if len(split) == 1 {
+			// internal image
+			readURL, err := Files.GetAvatarReadURL(avatarURL)
+
+			if err == nil {
+				profile["avatar"] = readURL
+			}
+
+		}
+	}
+
+	return profile
 }
 
 type UpdateCommunityMemberProfileCmd struct {

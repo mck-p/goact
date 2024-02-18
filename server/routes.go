@@ -128,6 +128,16 @@ var communityRoutes = createPrefixedRoutes("communities", []Route{
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.UpdateCommunityMemberProfile},
 	},
 	{
+		Method:   "post",
+		Path:     ":community_id/members/:member_id/profile/avatar/upload-url",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunityMemberProfileAvatarUploadURL},
+	},
+	{
+		Method:   "post",
+		Path:     ":community_id/members/:member_id/profile/avatar/read-url",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunityMemberProfileAvatarReadURL},
+	},
+	{
 		Method:   "get",
 		Path:     ":id/members/:member_id",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityMember},

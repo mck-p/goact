@@ -96,3 +96,12 @@ make dev-server # go run .
 ```sh
 make dev-client # cd client && pnpm dev
 ```
+
+## Future Features
+
+### Communities
+
+#### Member Profile
+
+- Email address
+- Allergies
