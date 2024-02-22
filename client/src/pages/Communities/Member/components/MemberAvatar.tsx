@@ -116,6 +116,7 @@ const MemberAvatar = ({
 
           // save url
           updateAvatar(url as string)
+
           handleClose()
         }}
       />

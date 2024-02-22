@@ -32,6 +32,30 @@ import ComfortList from './components/ComfortList'
 import { useUser } from '../../../hooks/useuser'
 import MemberAvatar from './components/MemberAvatar'
 import { useTranslation } from 'react-i18next'
+import EditableProfifleItem, {
+  PROFILE_ITEM_TYPE,
+} from './components/EditableProfileItem'
+
+const communityProfileSchema = [
+  {
+    type: 'text',
+    icon: 'Person',
+    label: 'Name in the community',
+    name: 'name',
+  },
+  {
+    type: 'date',
+    icon: 'CalendarToday',
+    label: 'Birthday',
+    name: 'birthday',
+  },
+  {
+    type: 'date',
+    icon: 'CalendarToday',
+    label: 'Anniversay',
+    name: 'anniversary',
+  },
+]
 
 const CommunityMember = () => {
   const { user } = useUser()
@@ -52,7 +76,7 @@ const CommunityMember = () => {
   const [editPhoneNumber, setEditPhoneNumber] = useState<boolean>(false)
   const [editEmailAddress, setEditEmailAddress] = useState<boolean>(false)
 
-  const updateMeberProfile = useCallback(
+  const updateMemberProfile = useCallback(
     (newValues: Partial<CommunityMemberProfile>) => {
       if (data) {
         updateProfile({
@@ -94,198 +118,25 @@ const CommunityMember = () => {
           name={member.name}
           canEdit={canEdit}
           updateAvatar={(url) =>
-            updateMeberProfile({
+            updateMemberProfile({
               avatar: url,
             })
           }
         />
-        {editUserName ? (
-          <form
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '1.25rem',
-            }}
-            onSubmit={(e) => {
-              e.preventDefault()
-
-              const data = new FormData(e.target as any)
-
-              updateMeberProfile({
-                name: data.get('name') as string,
-              })
-
-              setEditUserName(false)
-            }}
-          >
-            <TextField
-              defaultValue={member.name}
-              name="name"
-              label="Name in Community"
+        {communityProfileSchema.map((item) => {
+          return (
+            <EditableProfifleItem
+              type={item.type as PROFILE_ITEM_TYPE}
+              name={item.name}
+              label={item.label}
+              defaultValue={member[item.name as keyof typeof member]}
+              updateMemberProfile={updateMemberProfile}
+              memberCanEdit={user?.id === member.id}
+              key={item.name}
             />
-            <IconButton
-              onClick={() => setEditUserName(false)}
-              sx={{ marginLeft: '1rem' }}
-              title="Cancel"
-            >
-              <CancelIcon />
-            </IconButton>
-          </form>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '1.25rem',
-            }}
-          >
-            <div>
-              <Typography variant="caption" gutterBottom>
-                {translations('page.communities.members.name.label')}
-              </Typography>
+          )
+        })}
 
-              <Typography variant="h3">{member.name}</Typography>
-            </div>
-            {canEdit ? (
-              <IconButton
-                onClick={() => setEditUserName(true)}
-                title="Change name in community"
-                sx={{ marginLeft: '1rem' }}
-              >
-                <EditIcon />
-              </IconButton>
-            ) : null}
-          </div>
-        )}
-        {editBirthday ? (
-          <form
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '1.25rem',
-            }}
-            onSubmit={(e) => {
-              e.preventDefault()
-
-              const data = new FormData(e.target as any)
-
-              updateMeberProfile({
-                birthday: data.get('birthday') as string,
-              })
-
-              setEditBirthday(false)
-            }}
-            id="birthday-form"
-          >
-            <DatePicker
-              name="birthday"
-              defaultValue={
-                member.birthday ? dayjs(member.birthday) : undefined
-              }
-            />
-            <IconButton
-              onClick={() => setEditBirthday(false)}
-              sx={{ marginLeft: '1rem' }}
-              title="Cancel"
-            >
-              <CancelIcon />
-            </IconButton>
-          </form>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '1.25rem',
-            }}
-          >
-            <div>
-              <Typography variant="caption" gutterBottom>
-                {translations('page.communities.members.birthday.label')}
-              </Typography>
-              <Typography variant="h5" component="h3">
-                {member.birthday
-                  ? format(new Date(member.birthday), 'PP')
-                  : 'Unknown Birthday'}
-              </Typography>
-            </div>
-            {canEdit ? (
-              <IconButton
-                onClick={() => setEditBirthday(true)}
-                title="Change Birthday"
-                sx={{ marginLeft: '1rem' }}
-              >
-                <EditIcon />
-              </IconButton>
-            ) : null}
-          </div>
-        )}
-        {editAnniversary ? (
-          <form
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '1.25rem',
-            }}
-            onSubmit={(e) => {
-              e.preventDefault()
-
-              const data = new FormData(e.target as any)
-
-              updateMeberProfile({
-                anniversary: data.get('annivesary') as string,
-              })
-
-              setEditAnniversary(false)
-            }}
-            id="anniversary-form"
-          >
-            <DatePicker
-              name="annivesary"
-              defaultValue={
-                member.anniversary ? dayjs(member.anniversary) : undefined
-              }
-            />
-            <IconButton
-              onClick={() => setEditAnniversary(false)}
-              sx={{ marginLeft: '1rem' }}
-              title="Cancel"
-            >
-              <CancelIcon />
-            </IconButton>
-          </form>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '1.25rem',
-            }}
-          >
-            <div>
-              <Typography variant="caption" gutterBottom>
-                {translations('page.communities.members.anniversary.label')}
-              </Typography>
-              <Typography variant="h5" component="h3">
-                {member.anniversary
-                  ? format(new Date(member.anniversary), 'PP')
-                  : 'Unknown Anniversary'}
-              </Typography>
-            </div>
-            {canEdit ? (
-              <IconButton
-                onClick={() => setEditAnniversary(true)}
-                title="Change Anniversary"
-                sx={{ marginLeft: '1rem' }}
-              >
-                <EditIcon />
-              </IconButton>
-            ) : null}
-          </div>
-        )}
         {editAddress ? (
           <form
             style={{
