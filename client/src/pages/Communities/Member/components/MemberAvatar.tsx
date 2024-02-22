@@ -86,13 +86,13 @@ const MemberAvatar = ({
               const file = form.get('file') as File
               const type = file.type
               const [_, ext] = type.split('/')
-
+              const fileName = `${id}.${ext}`
               try {
                 const req = {
                   communityId,
                   memberId,
                   token,
-                  filename: `${id}.${ext}`,
+                  filename: fileName,
                 }
 
                 const fileUploadURL = await getProfileAvatarUploadURL(req)
@@ -105,9 +105,9 @@ const MemberAvatar = ({
                   body: file,
                 })
 
-                const readURL = await getProfileAvatarReadURL(req)
+                await getProfileAvatarReadURL(req)
 
-                url = readURL.url
+                url = fileName
               } catch (err) {
                 log.warn({ err }, 'Error when trying to upload file')
               }
