@@ -1,6 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { RootState } from '../../../state/store'
+import React, { useCallback, useEffect } from 'react'
 
 import { useParams } from 'wouter'
 
@@ -19,44 +17,8 @@ import { useUser } from '../../../hooks/useuser'
 import MemberAvatar from './components/MemberAvatar'
 
 import EditableProfifleItem from './components/EditableProfileItem'
-import {
-  PROFILE_ITEM_TYPE,
-  CommunityProfileSchemaItem,
-} from '../../../state/domains/communities'
+import { PROFILE_ITEM_TYPE } from '../../../state/domains/communities'
 import { useSession } from '@clerk/clerk-react'
-
-const communityProfileSchema: CommunityProfileSchemaItem[] = [
-  {
-    type: PROFILE_ITEM_TYPE.DATE,
-    icon: 'CalendarToday',
-    label: 'Birthday',
-    name: 'birthday',
-  },
-  {
-    type: PROFILE_ITEM_TYPE.DATE,
-    icon: 'CalendarToday',
-    label: 'Anniversay',
-    name: 'anniversary',
-  },
-  {
-    type: PROFILE_ITEM_TYPE.MULTI_LINE_TEXT,
-    icon: 'Home',
-    label: 'Address',
-    name: 'address',
-  },
-  {
-    type: PROFILE_ITEM_TYPE.TEXT,
-    icon: 'LocalPhone',
-    label: 'Phone Number',
-    name: 'phoneNumber',
-  },
-  {
-    type: PROFILE_ITEM_TYPE.TEXT,
-    icon: 'AlternateEmail',
-    label: 'Email',
-    name: 'email',
-  },
-]
 
 const CommunityMember = () => {
   const { user } = useUser()
