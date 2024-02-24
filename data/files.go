@@ -37,14 +37,14 @@ func (files *IFiles) getSaveFileURL(query GetSaveFileURL) (string, error) {
 
 func (files *IFiles) GetAvatarReadURL(filename string) (string, error) {
 	return files.getFileURL(GetFileURL{
-		Bucket: "goact-avatars",
+		Bucket: "user-generated",
 		Key:    filename,
 	})
 }
 
 func (files *IFiles) GetAvatarSaveURL(filename string) (string, error) {
 	return files.getSaveFileURL(GetSaveFileURL{
-		Bucket: "goact-avatars",
+		Bucket: "user-generated",
 		Key:    filename,
 	})
 }

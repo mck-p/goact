@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Switch, Route } from 'wouter'
 
 import Signup from './pages/Signup'
@@ -10,11 +10,17 @@ import * as Communities from './pages/Communities'
 
 import TopBar from './components/TopBar'
 import PageMeta from './components/PageMeta'
-import useConnectedAuthUser from './hooks/useConnectedAuthUser'
 import { useSession } from '@clerk/clerk-react'
 
 const AuthenticatedRoutes = () => {
   const { session } = useSession()
+
+  useEffect(() => {
+    console.log(
+      'This is when the session was last action',
+      session?.lastActiveAt,
+    )
+  }, [session?.lastActiveAt])
 
   if (!session) {
     return (
@@ -50,7 +56,6 @@ const AuthenticatedRoutes = () => {
  * be any views, forms, etc business components
  */
 const App = () => {
-  useConnectedAuthUser()
   return (
     <>
       <PageMeta />

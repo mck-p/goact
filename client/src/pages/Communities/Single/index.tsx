@@ -1,27 +1,21 @@
-import React from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { Box, Typography } from '@mui/material'
-import { Link, useParams } from 'wouter'
-import { useSelector } from 'react-redux'
+import { useParams } from 'wouter'
 import { navigate } from 'wouter/use-location'
 import List from '@mui/material/List'
-import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import Modal from '@mui/material/Modal'
 
-import Log from '../../../log'
-import { RootState } from '../../../state/store'
-
 import {
-  CommunityIdLens,
-  CommunityMemberIdLens,
   CommunityNameLens,
-  useDetleteCommunityMutation,
-  useGetCommunityByIDQuery,
-  useGetCommunityMembersQuery,
+  useDeleteCommunityMutation,
+  useLazyGetCommunityByIDQuery,
+  useLazyGetCommunityMembersQuery,
 } from '../../../state/domains/communities'
 
 import { Page } from './components/styled'
 import MemberListItem from './components/MemberListItem'
+import { useSession } from '@clerk/clerk-react'
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -38,39 +32,66 @@ const SingleCommunity = () => {
   const [open, setOpen] = React.useState(false)
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+  const { session } = useSession()
 
   const params = useParams()
 
-  const {
-    data: community,
-    error: communityError,
-    isLoading: communityIsLoading,
-  } = useGetCommunityByIDQuery(params.id!)
+  const [getCommunityById, communityByIdResults] =
+    useLazyGetCommunityByIDQuery()
 
-  const {
-    data: members,
-    error: membersError,
-    isLoading: membersAreLoading,
-  } = useGetCommunityMembersQuery(params.id!)
+  const [getCommunityMembers, communityMembers] =
+    useLazyGetCommunityMembersQuery()
 
-  const [deleteCommunity] = useDetleteCommunityMutation()
+  const [deleteCommunity] = useDeleteCommunityMutation()
 
-  const isLoading = communityIsLoading || membersAreLoading
-  const error = communityError || membersError
+  const handleDelete = useCallback(async () => {
+    if (session) {
+      const token = await session.getToken()
+      console.log(communityByIdResults)
+      if (token) {
+        await deleteCommunity({
+          id: communityByIdResults.currentData?._id!,
+          token,
+        })
+        navigate('/dashboard')
+      }
+    }
+  }, [session, navigate, communityByIdResults])
+  useEffect(() => {
+    const doWork = async () => {
+      const token = await session?.getToken()
 
-  if (isLoading) {
+      if (token) {
+        getCommunityById({
+          id: params.id!,
+          token: token,
+        })
+
+        getCommunityMembers({
+          token,
+          id: params.id!,
+        })
+      }
+    }
+
+    if (session) {
+      doWork()
+    }
+  }, [session, params])
+
+  const loading =
+    communityByIdResults.status !== 'fulfilled' &&
+    communityMembers.status !== 'fulfilled'
+
+  if (loading) {
     return 'Loading...'
   }
 
-  if (error) {
-    Log.warn(
-      { err: error, params: { id: params.id } },
-      'There was an error when we tried to get the community',
-    )
-  }
+  const community = communityByIdResults.currentData!
+  const members = communityMembers.currentData!
 
-  if (!community) {
-    return 'No data'
+  if (!community && !members) {
+    return 'No Community Found'
   }
 
   return (
@@ -96,14 +117,7 @@ const SingleCommunity = () => {
           <Typography>
             Are you sure you want to delete the Community {community.name}?
           </Typography>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={async () => {
-              await deleteCommunity(community._id)
-              navigate('/dashboard')
-            }}
-          >
+          <Button color="error" variant="contained" onClick={handleDelete}>
             Delete. Cannot be undone.
           </Button>
         </Box>
@@ -112,14 +126,4 @@ const SingleCommunity = () => {
   )
 }
 
-const OnlyAuthenticatedSingle = () => {
-  const token = useSelector((state: RootState) => state.auth.token)
-
-  if (!token) {
-    return null
-  }
-
-  return <SingleCommunity />
-}
-
-export default OnlyAuthenticatedSingle
+export default SingleCommunity

@@ -9,13 +9,13 @@ module.exports = {
   devtool: 'inline-source-map',
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: '[name].[contenthash].js',
+    filename: '[name].[chunkhash].js',
     publicPath: '/' 
   },
   devServer: {
     port: 8081,
     historyApiFallback: true,
-    hot: true,
+    hot: true
   },
   module: {
     rules: [
@@ -55,10 +55,9 @@ module.exports = {
 </html>`,
     }),
   ],
-  // optimization: {
-  //   runtimeChunk: 'single',
-  //   splitChunks: {
-  //     chunks: 'all',
-  //   },
-  // },
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+    },
+  },
 }

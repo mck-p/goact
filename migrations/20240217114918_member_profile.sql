@@ -12,9 +12,19 @@ ALTER TABLE
     community_members
 ADD COLUMN
     profile JSONB NOT NULL DEFAULT '{}';
+
+ALTER TABLE
+    communities
+ADD COLUMN
+    profile_schema JSONB NOT NULL DEFAULT '{}';
 -- +goose Down
 ALTER TABLE
     community_members
 DROP COLUMN
     profile;
+
+ALTER TABLE
+    communities
+DROP COLUM
+    profile_schema;
     

@@ -27,6 +27,9 @@ definitions:
         type: boolean
       name:
         type: string
+      profile_schema:
+        additionalProperties: true
+        type: object
     type: object
   data.CommunityMember:
     properties:
@@ -35,6 +38,9 @@ definitions:
       member:
         type: string
       profile:
+        additionalProperties: true
+        type: object
+      profile_schema:
         additionalProperties: true
         type: object
       user_avatar:

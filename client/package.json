@@ -27,6 +27,7 @@
     "@reduxjs/toolkit": "^2.0.1",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.11.5",
+    "@types/ramda": "^0.29.10",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@types/react-helmet": "^6.1.11",
@@ -65,8 +66,10 @@
     "wouter": "^2.12.1"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^4.70.0",
     "@mui/x-date-pickers": "^6.19.4",
     "@uidotdev/usehooks": "^2.4.1",
-    "dayjs": "^1.11.10"
+    "dayjs": "^1.11.10",
+    "ramda": "^0.29.1"
   }
 }

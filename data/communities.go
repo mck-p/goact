@@ -9,18 +9,20 @@ import (
 )
 
 type Community struct {
-	Id        string    `json:"_id"`
-	Name      string    `json:"name"`
-	IsPublic  bool      `json:"is_public"`
-	CreatedAt time.Time `json:"created_at"`
+	Id            string                 `json:"_id"`
+	Name          string                 `json:"name"`
+	ProfileSchema map[string]interface{} `json:"profile_schema"`
+	IsPublic      bool                   `json:"is_public"`
+	CreatedAt     time.Time              `json:"created_at"`
 }
 
 type CommunityMember struct {
-	Community  string                 `json:"community"`
-	Member     string                 `json:"member"`
-	UserName   string                 `json:"user_name"`
-	UserAvatar string                 `json:"user_avatar"`
-	Profile    map[string]interface{} `json:"profile"`
+	Community     string                 `json:"community"`
+	Member        string                 `json:"member"`
+	UserName      string                 `json:"user_name"`
+	UserAvatar    string                 `json:"user_avatar"`
+	Profile       map[string]interface{} `json:"profile"`
+	ProfileSchema map[string]interface{} `json:"profile_schema"`
 }
 
 type ICommunities struct{}
@@ -28,9 +30,10 @@ type ICommunities struct{}
 var Communities = &ICommunities{}
 
 type NewCommunity struct {
-	CreatorId string `json:"creator_id"`
-	IsPublic  bool   `json:"is_public"`
-	Name      string `json:"name"`
+	CreatorId     string                 `json:"creator_id"`
+	IsPublic      bool                   `json:"is_public"`
+	Name          string                 `json:"name"`
+	ProfileSchema map[string]interface{} `json:"profile_schema"`
 }
 
 func (communities *ICommunities) CreateCommunity(comm NewCommunity) (*Community, error) {
@@ -38,18 +41,19 @@ func (communities *ICommunities) CreateCommunity(comm NewCommunity) (*Community,
 
 	sql := `
 		INSERT INTO communities(
-			name, is_public
+			name, is_public, profile_schema
 		) VALUES (
-			$1, $2
+			$1, $2, $3
 		) RETURNING
 			_id as id,
 			name,
 			is_public as isPublic,
-			created_at as createdAt;
+			created_at as createdAt,
+			profile_schema as profileSchema;
 	`
-	row := connections.Database.QueryRow(sql, comm.Name, comm.IsPublic)
+	row := connections.Database.QueryRow(sql, comm.Name, comm.IsPublic, comm.ProfileSchema)
 
-	err := row.Scan(&community.Id, &community.Name, &community.IsPublic, &community.CreatedAt)
+	err := row.Scan(&community.Id, &community.Name, &community.IsPublic, &community.CreatedAt, &community.ProfileSchema)
 
 	if err != nil {
 		return &community, err
@@ -74,6 +78,7 @@ func (communities *ICommunities) GetUserCommunities(query UserCommunitiesQuery) 
 			communities._id as id,
 			communities.name as name,
 			communities.is_public as isPublic,
+			communities.profile_schema as profileSchema,
 			communities.created_at as created_at
 		FROM
 			communities
@@ -109,6 +114,7 @@ func (communities *ICommunities) GetCommunityMembers(query CommunityMembersQuery
 			community_members.community_id as community,
 			community_members.user_id as member,
 			community_members.profile as profile,
+			communities.profile_schema as profileSchema,
 			users.name as userName,
 			users.avatarUrl as userAvatar
 		FROM
@@ -149,6 +155,7 @@ func (communities *ICommunities) GetCommunityMember(query CommunityMemberQuery) 
 			community_members.community_id as community,
 			community_members.user_id as member,
 			community_members.profile as profile,
+			communities.profile_schema as profileSchema,
 			users.name as userName,
 			users.avatarUrl as userAvatar
 		FROM
@@ -173,6 +180,7 @@ func (communities *ICommunities) GetCommunityMember(query CommunityMemberQuery) 
 		&communityMember.Community,
 		&communityMember.Member,
 		&communityMember.Profile,
+		&communityMember.ProfileSchema,
 		&communityMember.UserName,
 		&communityMember.UserAvatar,
 	)
@@ -249,6 +257,7 @@ func (communities *ICommunities) GetCommunityById(query ComminityByIdQuery) (Com
 			communities._id as id,
 			communities.name as name,
 			communities.is_public as isPublic,
+			communities.profile_schema as profileSchema,
 			communities.created_at as created_at
 		FROM
 			communities
@@ -260,7 +269,7 @@ func (communities *ICommunities) GetCommunityById(query ComminityByIdQuery) (Com
 
 	row := connections.Database.QueryRow(sql, query.Id)
 
-	return community, row.Scan(&community.Id, &community.Name, &community.IsPublic, &community.CreatedAt)
+	return community, row.Scan(&community.Id, &community.Name, &community.IsPublic, &community.ProfileSchema, &community.CreatedAt)
 }
 
 type DeleteCommunityCommand struct {

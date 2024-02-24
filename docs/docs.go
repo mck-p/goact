@@ -535,6 +535,10 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "profile_schema": {
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },
@@ -548,6 +552,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "profile": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "profile_schema": {
                     "type": "object",
                     "additionalProperties": true
                 },
