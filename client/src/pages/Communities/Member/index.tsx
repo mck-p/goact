@@ -69,9 +69,6 @@ const CommunityMember = () => {
 
   const [updateProfile] = useUpdateCommunityMemberProfileMutation()
 
-  const [editUserName, setEditUserName] = useState<boolean>(false)
-  const [editBirthday, setEditBirthday] = useState<boolean>(false)
-  const [editAnniversary, setEditAnniversary] = useState<boolean>(false)
   const [editAddress, setEditaddress] = useState<boolean>(false)
   const [editPhoneNumber, setEditPhoneNumber] = useState<boolean>(false)
   const [editEmailAddress, setEditEmailAddress] = useState<boolean>(false)
@@ -150,7 +147,7 @@ const CommunityMember = () => {
 
               const data = new FormData(e.target as any)
 
-              updateMeberProfile({
+              updateMemberProfile({
                 address: data.get('address') as string,
               })
 

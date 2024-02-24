@@ -106,7 +106,6 @@ const EditableDateItem = ({
   updateMemberProfile,
   memberCanEdit,
 }: Props<string>) => {
-  const { t: translations } = useTranslation()
   const [canEdit, setCanEdit] = useState<boolean>(false)
 
   if (canEdit) {
@@ -133,6 +132,7 @@ const EditableDateItem = ({
         <DatePicker
           name={name}
           defaultValue={defaultValue ? dayjs(defaultValue) : undefined}
+          required={required}
         />
         <IconButton
           onClick={() => setCanEdit(false)}
@@ -155,7 +155,7 @@ const EditableDateItem = ({
     >
       <div>
         <Typography variant="caption" gutterBottom>
-          {translations('page.communities.members.birthday.label')}
+          {label}
         </Typography>
         <Typography variant="h5" component="h3">
           {defaultValue
