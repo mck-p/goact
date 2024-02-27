@@ -27,6 +27,26 @@ definitions:
         type: boolean
       name:
         type: string
+      profile_schema:
+        additionalProperties: true
+        type: object
+    type: object
+  data.CommunityMember:
+    properties:
+      community:
+        type: string
+      member:
+        type: string
+      profile:
+        additionalProperties: true
+        type: object
+      profile_schema:
+        additionalProperties: true
+        type: object
+      user_avatar:
+        type: string
+      user_name:
+        type: string
     type: object
   data.CurrentWeatherUpstreamResponse:
     properties:
@@ -269,10 +289,53 @@ definitions:
         type: object
       metadata: {}
     type: object
+  server.SuccessResponse-array_data_Community:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/data.Community'
+        type: array
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-array_data_CommunityMember:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/data.CommunityMember'
+        type: array
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
   server.SuccessResponse-data_Community:
     properties:
       data:
         $ref: '#/definitions/data.Community'
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-data_CommunityMember:
+    properties:
+      data:
+        $ref: '#/definitions/data.CommunityMember'
       includes:
         items: {}
         type: array
@@ -360,6 +423,12 @@ definitions:
         type: object
       metadata: {}
     type: object
+  server.UpdateCommunityMemberProfile:
+    properties:
+      profile:
+        additionalProperties: true
+        type: object
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -391,6 +460,22 @@ paths:
       tags:
       - Internal
   /api/v1/communities:
+    get:
+      operationId: GetUserCommunities
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-array_data_Community'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      summary: Retrieves the Communities that a User has access to
+      tags:
+      - Communities
     post:
       consumes:
       - application/json
@@ -414,7 +499,44 @@ paths:
       summary: Creates a new Community
       tags:
       - Communities
-  /api/v1/messages/groups:
+  /api/v1/communities/{community_id}/members/{member_id}/profile:
+    put:
+      consumes:
+      - application/json
+      description: This will create a new Community and assign the creator as the
+        only memberof that community
+      operationId: CreateCommunity
+      parameters:
+      - description: New Community Information
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/server.UpdateCommunityMemberProfile'
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_Community'
+      summary: Creates a new Community
+      tags:
+      - Communities
+  /api/v1/communities/{id}:
+    delete:
+      description: This will for realsies delete the communities and all related artifacts
+      operationId: DeleteCommunity
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-any'
+      summary: Deletes a Community
+      tags:
+      - Communities
     get:
       operationId: GetUserCommunityById
       produces:
@@ -431,6 +553,57 @@ paths:
       summary: Retrieves the Community of a given ID
       tags:
       - Communities
+  /api/v1/communities/{id}/members:
+    get:
+      operationId: GetCommunityMembers
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-array_data_CommunityMember'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      summary: Retrieves the Community of a given ID
+      tags:
+      - Communities
+  /api/v1/communities/{id}/members/{member_id}:
+    get:
+      operationId: GetCommunityMember
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_CommunityMember'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      summary: Retrieves the Community of a given ID by their Member ID
+      tags:
+      - Communities
+  /api/v1/messages/groups:
+    get:
+      operationId: GetUserMessageGroups
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-server_GetGroupsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      summary: Retrieves the Message Groups that a User has access to
+      tags:
+      - Messages
     post:
       consumes:
       - application/json

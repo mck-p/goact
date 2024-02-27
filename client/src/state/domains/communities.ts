@@ -1,46 +1,228 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { Community } from '../../services/communities.schema'
+import { Lens } from 'monocle-ts'
+
 const ROOT_URL = 'http://localhost:8080/api/v1'
 
 const COMMUNITIES_BASE_URL = `${ROOT_URL}/communities`
 
+export interface CommunityMemberProfile {
+  avatar?: string
+  name?: string
+  [x: string]: any
+}
+
+export interface CommunityMember {
+  community: string
+  member: string
+  user_name: string
+  user_avatar: string
+  profile: CommunityMemberProfile
+  profile_schema: Record<string, any>
+}
+
+export enum PROFILE_ITEM_TYPE {
+  TEXT = 'text',
+  DATE = 'date',
+  MULTI_LINE_TEXT = 'multiline',
+}
+
+export interface CommunityProfileSchemaItem {
+  type: PROFILE_ITEM_TYPE
+  icon: string
+  label: string
+  name: string
+}
+
+export interface Community {
+  _id: string
+  name: string
+  is_public: boolean
+  profile_schema: Record<string, any>
+}
+
+export const CommunityMemberLens = Lens.fromProp<CommunityMember>()
+
+export const CommunityMemberProfile =
+  Lens.fromProp<CommunityMember>()('profile')
+
+export const CommunityMemberCommunityIDLens = CommunityMemberLens('community')
+export const CommunityMemberIdLens = CommunityMemberLens('member')
+export const CommunityMemberUserNameLens = CommunityMemberLens('user_name')
+export const CommunityMemberUserAvatarLens = CommunityMemberLens('user_avatar')
+
+export const CommunityMemberProfileNameLens = CommunityMemberProfile.compose(
+  Lens.fromProp<CommunityMemberProfile>()('name'),
+)
+
+export const CommunityMemberProfileAvatarLens = CommunityMemberProfile.compose(
+  Lens.fromProp<CommunityMemberProfile>()('avatar'),
+)
+
+export const lensForProfileKey = (key: string) =>
+  CommunityMemberLens('profile').compose(Lens.fromProp<any>()(key))
+
+export const CommunityMemberNameLens = new Lens<CommunityMember, string>(
+  (cm: CommunityMember) => {
+    const profileName = CommunityMemberProfileNameLens.get(cm)
+
+    if (!profileName) {
+      return CommunityMemberUserNameLens.get(cm)
+    }
+
+    return profileName
+  },
+  (name: string) => (cm: CommunityMember) =>
+    CommunityMemberProfileNameLens.modify(() => name)(cm),
+)
+
+export const CommunityMemberAvatarLens = new Lens<CommunityMember, string>(
+  (cm: CommunityMember) => {
+    const profileName = CommunityMemberProfileAvatarLens.get(cm)
+
+    if (!profileName) {
+      return CommunityMemberUserAvatarLens.get(cm)
+    }
+
+    return profileName
+  },
+  (name: string) => (cm: CommunityMember) =>
+    CommunityMemberProfileAvatarLens.modify(() => name)(cm),
+)
+
+export const CommunityLens = Lens.fromProp<Community>()
+export const CommunityIdLens = CommunityLens('_id')
+export const CommunityNameLens = CommunityLens('name')
+
 export const communityApi = createApi({
   reducerPath: 'communityApi',
-  tagTypes: ['Communities'],
+  tagTypes: ['Communities', 'CommunityMembers'],
   baseQuery: fetchBaseQuery({
     baseUrl: COMMUNITIES_BASE_URL,
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as any).auth.token
+    // prepareHeaders: (headers, { getState }) => {
+    //   const token = (getState() as any).auth.token
 
-      // If we have a token set in state, let's assume that we should be passing it.
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`)
-      }
+    //   if (token) {
+    //     headers.set('authorization', `Bearer ${token}`)
+    //   }
 
-      return headers
-    },
+    //   return headers
+    // },
   }),
   endpoints: (build) => ({
-    getCommunities: build.query<Community[], void>({
-      query: () => '',
+    getCommunities: build.query<Community[], { token: string }>({
+      query: ({ token }) => ({
+        url: '',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
       providesTags: (result) =>
         result
           ? result.map(({ _id }) => ({ type: 'Communities', id: _id }))
           : ['Communities'],
     }),
-    getCommunityByID: build.query<Community, string>({
-      query: (id: string) => `/${id}`,
+    getCommunityByID: build.query<Community, { token: string; id: string }>({
+      query: ({ id, token }) => ({
+        url: `/${id}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
     }),
-    addCommunity: build.mutation<Community, Partial<Community>>({
-      query(body) {
+    getCommunityMembers: build.query<
+      CommunityMember[],
+      { token: string; id: string }
+    >({
+      query: ({ id, token }) => ({
+        url: `/${id}/members`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result) =>
+        result
+          ? result.map(({ community, member }) => ({
+              type: 'CommunityMembers',
+              id: `${community}::${member}`,
+            }))
+          : ['CommunityMembers'],
+    }),
+    getCommunityMember: build.query<
+      CommunityMember,
+      { community: string; member: string; token: string }
+    >({
+      query: ({ community, member, token }) => ({
+        url: `/${community}/members/${member}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              {
+                type: 'CommunityMembers',
+                id: `${result.community}::${result.member}`,
+              },
+            ]
+          : ['CommunityMembers'],
+    }),
+    addCommunity: build.mutation<
+      Community,
+      { community: Partial<Community>; token: string }
+    >({
+      query({ community, token }) {
         return {
           url: `/`,
           method: 'POST',
-          body,
+          body: community,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       },
-      // Invalidates all Post-type queries providing the `LIST` id - after all, depending of the sort order,
-      // that newly created post could show up in any lists.
+      invalidatesTags: ['Communities'],
+    }),
+    updateCommunityMemberProfile: build.mutation<
+      CommunityMember,
+      CommunityMemberProfile & {
+        communityId: string
+        memberId: string
+        token: string
+      }
+    >({
+      query({ communityId, memberId, token, ...profile }) {
+        return {
+          url: `/${communityId}/members/${memberId}/profile`,
+          method: 'PUT',
+          body: {
+            profile,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      },
+      invalidatesTags: (result) =>
+        result
+          ? [
+              {
+                type: 'CommunityMembers',
+                id: `${result.community}::${result.member}`,
+              },
+            ]
+          : ['CommunityMembers'],
+    }),
+    deleteCommunity: build.mutation<unknown, { token: string; id: string }>({
+      query({ id, token }) {
+        return {
+          url: `/${id}`,
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      },
       invalidatesTags: ['Communities'],
     }),
   }),
@@ -49,5 +231,17 @@ export const communityApi = createApi({
 export const {
   useAddCommunityMutation,
   useGetCommunitiesQuery,
+  useLazyGetCommunitiesQuery,
+
   useGetCommunityByIDQuery,
+  useLazyGetCommunityByIDQuery,
+
+  useGetCommunityMembersQuery,
+  useLazyGetCommunityMembersQuery,
+
+  useDeleteCommunityMutation,
+  useGetCommunityMemberQuery,
+  useLazyGetCommunityMemberQuery,
+
+  useUpdateCommunityMemberProfileMutation,
 } = communityApi

@@ -88,6 +88,10 @@ make migrate-down # migrates teh database back one migration. See scripts/rollba
 ### API
 
 ```sh
+# Copy over basic env file
+# TODO: fill out with your
+# specific values before starting
+cp .env.example .env
 make dev-server # go run .
 ```
 
@@ -96,3 +100,12 @@ make dev-server # go run .
 ```sh
 make dev-client # cd client && pnpm dev
 ```
+
+## Future Features
+
+### Communities
+
+#### Member Profile
+
+- Email address
+- Allergies

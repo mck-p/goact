@@ -356,6 +356,18 @@ func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
 	defer span.End()
 	user := c.Locals("user").(*data.User)
 
+	canGetMessageGroups := authorization.CanPerformAction(
+		user.Id,
+		"group",
+		"getMessageGroups",
+	)
+
+	if !canGetMessageGroups {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
 	groups, err := data.Messages.GetUserGroups(data.UserGroupsQuery{
 		UserId: user.Id,
 	})
@@ -374,13 +386,25 @@ func (handlers *Handler) GetGroups(c *fiber.Ctx) error {
 //	@Tags		Communities
 //	@Produce	application/vnd.api+json
 //
-// @Success	200	{object}	SuccessResponse[GetGroupsResponse]
+// @Success	200	{object}	SuccessResponse[[]data.Community]
 // @Failure	500	{object}	ErrorResponse[GenericError]
-// @Router		/api/v1/messages/groups [get]
+// @Router		/api/v1/communities [get]
 func (handlers *Handler) GetCommunities(c *fiber.Ctx) error {
 	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunities")
 	defer span.End()
 	user := c.Locals("user").(*data.User)
+
+	canGetCommunities := authorization.CanPerformAction(
+		user.Id,
+		"community",
+		"list",
+	)
+
+	if !canGetCommunities {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
 
 	communities, err := data.Communities.GetUserCommunities(data.UserCommunitiesQuery{
 		UserId: user.Id,
@@ -402,13 +426,28 @@ func (handlers *Handler) GetCommunities(c *fiber.Ctx) error {
 //
 // @Success	200	{object}	SuccessResponse[data.Community]
 // @Failure	500	{object}	ErrorResponse[GenericError]
-// @Router		/api/v1/messages/groups [get]
+// @Router		/api/v1/communities/{id} [get]
 func (handlers *Handler) GetCommunityById(c *fiber.Ctx) error {
 	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunitiy")
 	defer span.End()
+	communityId := c.Params("id")
+
+	user := c.Locals("user").(*data.User)
+
+	canViewCommunity := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s", communityId),
+		"view",
+	)
+
+	if !canViewCommunity {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
 
 	community, err := data.Communities.GetCommunityById(data.ComminityByIdQuery{
-		Id: c.Params("id"),
+		Id: communityId,
 	})
 
 	if err != nil {
@@ -416,6 +455,88 @@ func (handlers *Handler) GetCommunityById(c *fiber.Ctx) error {
 	}
 
 	return JSONAPI(c, 200, community)
+}
+
+// GetCommunityMembers	godoc
+//
+//	@Id			GetCommunityMembers
+//	@Summary	Retrieves the Community of a given ID
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[[]data.CommunityMember]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/communities/{id}/members [get]
+func (handlers *Handler) GetCommunityMembers(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunitiyMembers")
+	defer span.End()
+	communityId := c.Params("id")
+
+	user := c.Locals("user").(*data.User)
+
+	canViewCommunity := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s", communityId),
+		"getMembers",
+	)
+
+	if !canViewCommunity {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	members, err := data.Communities.GetCommunityMembers(data.CommunityMembersQuery{
+		Id: communityId,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, members)
+}
+
+// GetCommunityMember	godoc
+//
+//	@Id			GetCommunityMember
+//	@Summary	Retrieves the Community of a given ID by their Member ID
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[data.CommunityMember]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/communities/{id}/members/{member_id} [get]
+func (handlers *Handler) GetCommunityMember(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunitiyMembers")
+	defer span.End()
+	communityId := c.Params("id")
+	memberId := c.Params("member_id")
+
+	user := c.Locals("user").(*data.User)
+
+	canGetCommunityMember := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s::member::%s", communityId, memberId),
+		"getMembers",
+	)
+
+	if !canGetCommunityMember {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	members, err := data.Communities.GetCommunityMember(data.CommunityMemberQuery{
+		Id:       communityId,
+		MemberId: memberId,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, members)
 }
 
 type MessageGroupRequest struct {
@@ -440,6 +561,18 @@ func (handlers *Handler) CreateMessageGroup(c *fiber.Ctx) error {
 
 	user := c.Locals("user").(*data.User)
 
+	canCreateMessageGroup := authorization.CanPerformAction(
+		user.Id,
+		"group",
+		"create",
+	)
+
+	if !canCreateMessageGroup {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
 	payload := MessageGroupRequest{}
 	err := c.BodyParser(&payload)
 
@@ -460,8 +593,9 @@ func (handlers *Handler) CreateMessageGroup(c *fiber.Ctx) error {
 }
 
 type CreateCommunityRequest struct {
-	Name     string `json:"name"`
-	IsPublic bool   `json:"is_public"`
+	Name          string                 `json:"name"`
+	IsPublic      bool                   `json:"is_public"`
+	ProfileSchema map[string]interface{} `json:"profile_schema"`
 }
 
 // @Id CreateCommunity
@@ -482,6 +616,18 @@ func (handlers *Handler) CreateCommunity(c *fiber.Ctx) error {
 
 	user := c.Locals("user").(*data.User)
 
+	canCreateCommunity := authorization.CanPerformAction(
+		user.Id,
+		"community",
+		"create",
+	)
+
+	if !canCreateCommunity {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
 	payload := CreateCommunityRequest{}
 	err := c.BodyParser(&payload)
 
@@ -490,9 +636,10 @@ func (handlers *Handler) CreateCommunity(c *fiber.Ctx) error {
 	}
 
 	result, err := data.Communities.CreateCommunity(data.NewCommunity{
-		Name:      payload.Name,
-		IsPublic:  payload.IsPublic,
-		CreatorId: user.Id,
+		Name:          payload.Name,
+		IsPublic:      payload.IsPublic,
+		CreatorId:     user.Id,
+		ProfileSchema: payload.ProfileSchema,
 	})
 
 	if err != nil {
@@ -500,6 +647,187 @@ func (handlers *Handler) CreateCommunity(c *fiber.Ctx) error {
 	}
 
 	return JSONAPI(c, 201, result)
+}
+
+type UpdateCommunityMemberProfile struct {
+	Profile map[string]interface{} `json:"profile"`
+}
+
+// @Id CreateCommunity
+// @Summary Creates a new Community
+// @Description This will create a new Community and assign the creator as the only memberof that community
+// @Tags Communities
+// @Accept json
+//
+//	@Produce	application/vnd.api+json
+//
+// @Param requestBody body UpdateCommunityMemberProfile true "New Community Information"
+//
+// @Success 200 {object} SuccessResponse[data.Community]
+// @Router /api/v1/communities/{community_id}/members/{member_id}/profile [put]
+func (handlers *Handler) UpdateCommunityMemberProfile(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::UpdateCommunityMemberProfile")
+	defer span.End()
+	communityId := c.Params("community_id")
+	memberId := c.Params("member_id")
+	user := c.Locals("user").(*data.User)
+
+	canUpdateCommunityMemberProfile := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s::member::%s", communityId, memberId),
+		"update",
+	)
+
+	if !canUpdateCommunityMemberProfile {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	payload := UpdateCommunityMemberProfile{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := data.Communities.UpdateCommunityMemberProfile(data.UpdateCommunityMemberProfileCmd{
+		CommunityId: communityId,
+		MemberId:    memberId,
+		Profile:     payload.Profile,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, result)
+}
+
+// @Id DeleteCommunity
+// @Summary Deletes a Community
+// @Description This will for realsies delete the communities and all related artifacts
+// @Tags Communities
+//
+//	@Produce	application/vnd.api+json
+//
+// @Success 200 {object} SuccessResponse[any]
+// @Router /api/v1/communities/{id} [delete]
+func (handlers *Handler) DeleteCommunity(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::DeleteCommunity")
+	defer span.End()
+
+	communityId := c.Params("id")
+
+	user := c.Locals("user").(*data.User)
+
+	canDeleteCommunity := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("group::%s", communityId),
+		"delete",
+	)
+
+	if !canDeleteCommunity {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	err := data.Communities.DeleteCommunity(data.DeleteCommunityCommand{
+		Id: communityId,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, fiber.Map{})
+}
+
+type CommuntiyMemberProfileAvatarRequest struct {
+	Filename string `json:"filename"`
+}
+
+func (handlers *Handler) CreateCommunityMemberProfileAvatarUploadURL(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateCommunityMemberProfileAvatarUploadURL")
+	defer span.End()
+
+	communityId := c.Params("community_id")
+	memberId := c.Params("member_id")
+
+	user := c.Locals("user").(*data.User)
+
+	canUpdateCommunityMemberAvatar := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("group::%s::member::%s", communityId, memberId),
+		"updateProfile",
+	)
+
+	if !canUpdateCommunityMemberAvatar {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	payload := CommuntiyMemberProfileAvatarRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	url, err := data.Files.GetAvatarSaveURL(payload.Filename)
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, fiber.Map{
+		"url": url,
+	})
+}
+
+type CommuntiyMemberProfileAvatarReadRequest struct {
+	Filename string `json:"filename"`
+}
+
+func (handlers *Handler) CreateCommunityMemberProfileAvatarReadURL(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateCommunityMemberProfileAvatarReadURL")
+	defer span.End()
+
+	communityId := c.Params("community_id")
+	memberId := c.Params("member_id")
+
+	user := c.Locals("user").(*data.User)
+
+	canReadMemberProfileAvatarURL := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("group::%s::member::%s", communityId, memberId),
+		"readProfile",
+	)
+
+	if !canReadMemberProfileAvatarURL {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	payload := CommuntiyMemberProfileAvatarReadRequest{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	url, err := data.Files.GetAvatarReadURL(payload.Filename)
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, fiber.Map{
+		"url": url,
+	})
 }
 
 type WebsocketMessage struct {

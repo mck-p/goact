@@ -2,8 +2,9 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 const ROOT_URL = 'http://localhost:8080/api/v1'
 
 const USER_BASE_URL = `${ROOT_URL}/users`
-interface User {
-  id: string
+
+export interface User {
+  _id: string
   externalId: string
   name: string
   avatarUrl: string

@@ -50,6 +50,30 @@ const docTemplate = `{
             }
         },
         "/api/v1/communities": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Retrieves the Communities that a User has access to",
+                "operationId": "GetUserCommunities",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-array_data_Community"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "This will create a new Community and assign the creator as the only memberof that community",
                 "consumes": [
@@ -84,7 +108,42 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/messages/groups": {
+        "/api/v1/communities/{community_id}/members/{member_id}/profile": {
+            "put": {
+                "description": "This will create a new Community and assign the creator as the only memberof that community",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Creates a new Community",
+                "operationId": "CreateCommunity",
+                "parameters": [
+                    {
+                        "description": "New Community Information",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.UpdateCommunityMemberProfile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_Community"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/communities/{id}": {
             "get": {
                 "produces": [
                     "application/vnd.api+json"
@@ -99,6 +158,103 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/server.SuccessResponse-data_Community"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "This will for realsies delete the communities and all related artifacts",
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Deletes a Community",
+                "operationId": "DeleteCommunity",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/communities/{id}/members": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Retrieves the Community of a given ID",
+                "operationId": "GetCommunityMembers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-array_data_CommunityMember"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/communities/{id}/members/{member_id}": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Retrieves the Community of a given ID by their Member ID",
+                "operationId": "GetCommunityMember",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_CommunityMember"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/messages/groups": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Retrieves the Message Groups that a User has access to",
+                "operationId": "GetUserMessageGroups",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-server_GetGroupsResponse"
                         }
                     },
                     "500": {
@@ -378,6 +534,35 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "profile_schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "data.CommunityMember": {
+            "type": "object",
+            "properties": {
+                "community": {
+                    "type": "string"
+                },
+                "member": {
+                    "type": "string"
+                },
+                "profile": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "profile_schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "user_avatar": {
+                    "type": "string"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }
@@ -748,11 +933,74 @@ const docTemplate = `{
                 "metadata": {}
             }
         },
+        "server.SuccessResponse-array_data_Community": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.Community"
+                    }
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-array_data_CommunityMember": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.CommunityMember"
+                    }
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
         "server.SuccessResponse-data_Community": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/data.Community"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-data_CommunityMember": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data.CommunityMember"
                 },
                 "includes": {
                     "type": "array",
@@ -879,6 +1127,15 @@ const docTemplate = `{
                     }
                 },
                 "metadata": {}
+            }
+        },
+        "server.UpdateCommunityMemberProfile": {
+            "type": "object",
+            "properties": {
+                "profile": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
             }
         }
     },

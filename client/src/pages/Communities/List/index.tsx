@@ -1,26 +1,40 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'wouter'
 import { useTranslation } from 'react-i18next'
 import { Button, Typography } from '@mui/material'
 
-import { useGetCommunitiesQuery } from '../../../state/domains/communities'
-import { RootState } from '../../../state/store'
+import { useLazyGetCommunitiesQuery } from '../../../state/domains/communities'
 import { Page, Communities, Community } from './components/styled'
+import { useSession } from '@clerk/clerk-react'
 
 const ListCommunities = () => {
-  const { data, error, isLoading, isFetching } = useGetCommunitiesQuery()
+  const [trigger, result, lastPromiseInfo] = useLazyGetCommunitiesQuery()
+  const { session } = useSession()
+
   const { t } = useTranslation()
 
-  if (isLoading) {
-    return '...loading'
+  useEffect(() => {
+    if (session) {
+      session?.getToken().then((token) => {
+        if (token) {
+          trigger({
+            token,
+          })
+        }
+      })
+    }
+  }, [session])
+
+  if (result.status !== 'fulfilled') {
+    return 'Loading...'
   }
 
   return (
     <Page>
       <Typography>{t('page.communities.list.title')}</Typography>
       <Communities>
-        {data?.map(({ _id, name, is_public }) => (
+        {result.currentData?.map(({ _id, name, is_public }) => (
           <Community key={_id}>
             <Typography variant="h4">{name}</Typography>
             <Typography>Is public {is_public ? 'yes' : 'no'}</Typography>
@@ -37,14 +51,4 @@ const ListCommunities = () => {
   )
 }
 
-const OnlyAuthenticatedList = () => {
-  const token = useSelector((state: RootState) => state.auth.token)
-
-  if (!token) {
-    return null
-  }
-
-  return <ListCommunities />
-}
-
-export default OnlyAuthenticatedList
+export default ListCommunities

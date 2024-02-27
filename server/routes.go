@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
@@ -20,11 +19,6 @@ func createPrefixedRoutes(prefix string, routes []Route) []Route {
 	result := []Route{}
 
 	for _, route := range routes {
-		slog.Debug("Creating new route",
-			slog.String("route path", route.Path),
-			slog.String("route method", route.Method),
-		)
-
 		path := route.Path
 
 		if path != "" {
@@ -33,8 +27,6 @@ func createPrefixedRoutes(prefix string, routes []Route) []Route {
 		} else {
 			path = prefix
 		}
-
-		slog.Debug("Built path", slog.String("path", path))
 
 		result = append(result, Route{
 			Handlers: route.Handlers,
@@ -112,7 +104,7 @@ var websocketRoutes = createPrefixedRoutes("ws", []Route{
 	},
 })
 
-var messageRoutes = createPrefixedRoutes("messaages", []Route{
+var messageRoutes = createPrefixedRoutes("messages", []Route{
 	{
 		Method:   "get",
 		Path:     "groups/:id",
@@ -129,8 +121,42 @@ var messageRoutes = createPrefixedRoutes("messaages", []Route{
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateMessageGroup},
 	},
 })
-
 var communityRoutes = createPrefixedRoutes("communities", []Route{
+	{
+		Method:   "put",
+		Path:     ":community_id/members/:member_id/profile",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.UpdateCommunityMemberProfile},
+	},
+	{
+		Method:   "post",
+		Path:     ":community_id/members/:member_id/profile/avatar/upload-url",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunityMemberProfileAvatarUploadURL},
+	},
+	{
+		Method:   "post",
+		Path:     ":community_id/members/:member_id/profile/avatar/read-url",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunityMemberProfileAvatarReadURL},
+	},
+	{
+		Method:   "get",
+		Path:     ":id/members/:member_id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityMember},
+	},
+	{
+		Method:   "get",
+		Path:     ":id/members",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityMembers},
+	},
+	{
+		Method:   "get",
+		Path:     ":id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityById},
+	},
+	{
+		Method:   "delete",
+		Path:     ":id",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.DeleteCommunity},
+	},
 	{
 		Method:   "post",
 		Path:     "",
@@ -140,11 +166,6 @@ var communityRoutes = createPrefixedRoutes("communities", []Route{
 		Method:   "get",
 		Path:     "",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunities},
-	},
-	{
-		Method:   "get",
-		Path:     ":id",
-		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityById},
 	},
 })
 
