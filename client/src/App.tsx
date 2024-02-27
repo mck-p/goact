@@ -15,13 +15,6 @@ import { useSession } from '@clerk/clerk-react'
 const AuthenticatedRoutes = () => {
   const { session } = useSession()
 
-  useEffect(() => {
-    console.log(
-      'This is when the session was last action',
-      session?.lastActiveAt,
-    )
-  }, [session?.lastActiveAt])
-
   if (!session) {
     return (
       <Switch>
