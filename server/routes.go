@@ -104,7 +104,7 @@ var websocketRoutes = createPrefixedRoutes("ws", []Route{
 	},
 })
 
-var messageRoutes = createPrefixedRoutes("messaages", []Route{
+var messageRoutes = createPrefixedRoutes("messages", []Route{
 	{
 		Method:   "get",
 		Path:     "groups/:id",
