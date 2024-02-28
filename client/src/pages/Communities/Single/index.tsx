@@ -11,6 +11,7 @@ import {
   useDeleteCommunityMutation,
   useLazyGetCommunityByIDQuery,
   useLazyGetCommunityMembersQuery,
+  useLazyGetCommunityFeedItemsQuery,
 } from '../../../state/domains/communities'
 
 import { Page } from './components/styled'
@@ -41,6 +42,8 @@ const SingleCommunity = () => {
 
   const [getCommunityMembers, communityMembers] =
     useLazyGetCommunityMembersQuery()
+  const [getCommuntyFeedItems, communityFeedItemsResults] =
+    useLazyGetCommunityFeedItemsQuery()
 
   const [deleteCommunity] = useDeleteCommunityMutation()
 
@@ -57,6 +60,7 @@ const SingleCommunity = () => {
       }
     }
   }, [session, navigate, communityByIdResults])
+
   useEffect(() => {
     const doWork = async () => {
       const token = await session?.getToken()
@@ -70,6 +74,11 @@ const SingleCommunity = () => {
         getCommunityMembers({
           token,
           id: params.id!,
+        })
+
+        getCommuntyFeedItems({
+          id: params.id!,
+          token,
         })
       }
     }
@@ -89,10 +98,13 @@ const SingleCommunity = () => {
 
   const community = communityByIdResults.currentData!
   const members = communityMembers.currentData!
+  const feedItems = communityFeedItemsResults.currentData!
 
   if (!community && !members) {
     return 'No Community Found'
   }
+
+  console.log(feedItems, 'FEED ITEMS')
 
   return (
     <Page>
