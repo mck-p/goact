@@ -188,6 +188,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/communities/{id}/items": {
+            "get": {
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Retrieves the Community Feed Items of a given Community ID",
+                "operationId": "GetcommunityFeedItems",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-array_data_CommunityFeedItem"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.ErrorResponse-server_GenericError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "Communities"
+                ],
+                "summary": "Creates a new Community Feed Item",
+                "operationId": "CreateCommunityFeedItem",
+                "parameters": [
+                    {
+                        "description": "Feed Item information",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.NewCommunityFeedItem"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/server.SuccessResponse-data_CommunityFeedItem"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/communities/{id}/members": {
             "get": {
                 "produces": [
@@ -542,6 +600,33 @@ const docTemplate = `{
                 }
             }
         },
+        "data.CommunityFeedItem": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "author_id": {
+                    "type": "string"
+                },
+                "community_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "data.CommunityMember": {
             "type": "object",
             "properties": {
@@ -809,6 +894,10 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "profile_schema": {
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },
@@ -916,6 +1005,18 @@ const docTemplate = `{
                 }
             }
         },
+        "server.NewCommunityFeedItem": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "server.SuccessResponse-any": {
             "type": "object",
             "properties": {
@@ -940,6 +1041,28 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/data.Community"
+                    }
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-array_data_CommunityFeedItem": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.CommunityFeedItem"
                     }
                 },
                 "includes": {
@@ -982,6 +1105,25 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/data.Community"
+                },
+                "includes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "links": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/server.Link"
+                    }
+                },
+                "metadata": {}
+            }
+        },
+        "server.SuccessResponse-data_CommunityFeedItem": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/data.CommunityFeedItem"
                 },
                 "includes": {
                     "type": "array",
