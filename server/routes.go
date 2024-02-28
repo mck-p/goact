@@ -158,6 +158,11 @@ var communityRoutes = createPrefixedRoutes("communities", []Route{
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.GetCommunityFeedItems},
 	},
 	{
+		Method:   "post",
+		Path:     ":id/items",
+		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.CreateCommunityFeedItem},
+	},
+	{
 		Method:   "delete",
 		Path:     ":id",
 		Handlers: []fiber.Handler{Middlewares.OnlyAuthenticated(), Handlers.DeleteCommunity},
