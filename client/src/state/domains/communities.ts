@@ -201,6 +201,22 @@ export const communityApi = createApi({
       },
       invalidatesTags: ['Communities'],
     }),
+    postFeedItem: build.mutation<
+      CommunityFeedItem,
+      { item: Partial<CommunityFeedItem>; token: string; communityId: string }
+    >({
+      query({ item, token, communityId }) {
+        return {
+          url: `/${communityId}/items`,
+          method: 'POST',
+          body: item,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      },
+      invalidatesTags: ['CommunityFeedItems'],
+    }),
     updateCommunityMemberProfile: build.mutation<
       CommunityMember,
       CommunityMemberProfile & {
@@ -258,6 +274,7 @@ export const {
   useLazyGetCommunityMembersQuery,
 
   useLazyGetCommunityFeedItemsQuery,
+  usePostFeedItemMutation,
 
   useDeleteCommunityMutation,
   useGetCommunityMemberQuery,

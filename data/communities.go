@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"log/slog"
 	"mck-p/goact/connections"
 	"strings"
 	"time"
@@ -323,11 +324,11 @@ func (communities *ICommunities) GetFeedItemsForCommunity(request GetFeedItemsFo
 			community_feed_items.created_at as createdAt,
 			community_feed_items.updated_at as updatedAt,
 			community_feed_items.data as data,
-			community_feed_tiems.type as type
+			community_feed_items.type as type
 		FROM
 			community_feed_items
 		WHERE
-			_id = $1
+			community_feed_items.community_id = $1
 		ORDER BY created_at %s
 		LIMIT $2
 		OFFSET $3
@@ -335,7 +336,11 @@ func (communities *ICommunities) GetFeedItemsForCommunity(request GetFeedItemsFo
 
 	rows, err := connections.Database.Query(sql, request.CommunityId, request.Limit, request.Offset)
 
+	slog.Info("This is rows", slog.Any("rows", rows), slog.String("sql", sql), slog.Any("args", request))
+
 	if err != nil {
+		slog.Info("Error getting rows", slog.Any("error", err), slog.String("sql", sql))
+
 		return []CommunityFeedItem{}, err
 	}
 

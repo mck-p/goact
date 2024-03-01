@@ -16,7 +16,9 @@ import {
 
 import { Page } from './components/styled'
 import MemberListItem from './components/MemberListItem'
+import FeedItemForm from './components/FeedItemForm'
 import { useSession } from '@clerk/clerk-react'
+import FeedItem from './components/FeedItem'
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -98,14 +100,12 @@ const SingleCommunity = () => {
 
   const community = communityByIdResults.currentData!
   const members = communityMembers.currentData!
-  const feedItems = communityFeedItemsResults.currentData!
+  const feedItems = communityFeedItemsResults.currentData! || []
 
   if (!community && !members) {
     return 'No Community Found'
   }
-
-  console.log(feedItems, 'FEED ITEMS')
-
+  console.log('feed items', feedItems)
   return (
     <Page>
       <Typography variant="h2" gutterBottom align="center">
@@ -116,6 +116,12 @@ const SingleCommunity = () => {
           <MemberListItem key={i} member={member} />
         ))}
       </List>
+      <FeedItemForm communityId={community._id} />
+      <div>
+        {feedItems.map((item) => (
+          <FeedItem key={item._id} communityId={community._id} {...item} />
+        ))}
+      </div>
       <Button color="secondary" onClick={handleOpen}>
         Delete
       </Button>
