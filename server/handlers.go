@@ -744,6 +744,128 @@ func (handlers *Handler) DeleteCommunity(c *fiber.Ctx) error {
 	return JSONAPI(c, 200, fiber.Map{})
 }
 
+// GetcommunityFeedItems	godoc
+//
+//	@Id			GetcommunityFeedItems
+//	@Summary	Retrieves the Community Feed Items of a given Community ID
+//	@Tags		Communities
+//	@Produce	application/vnd.api+json
+//
+// @Success	200	{object}	SuccessResponse[[]data.CommunityFeedItem]
+// @Failure	500	{object}	ErrorResponse[GenericError]
+// @Router		/api/v1/communities/{id}/items [get]
+func (handlers *Handler) GetCommunityFeedItems(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::GetCommunityFeedItems")
+	defer span.End()
+	communityId := c.Params("id")
+
+	user := c.Locals("user").(*data.User)
+
+	canViewCommunityFeedItems := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s", communityId),
+		"getFeedItems",
+	)
+
+	if !canViewCommunityFeedItems {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	limit, err := c.ParamsInt("limit", 20)
+
+	if err != nil {
+		return JSONAPI(c, 400, fiber.Map{
+			"error": fiber.Map{
+				"message": "Limit failed parsing as int",
+				"valule":  limit,
+			},
+		})
+	}
+
+	offset, err := c.ParamsInt("offset", 0)
+
+	if err != nil {
+		return JSONAPI(c, 400, fiber.Map{
+			"error": fiber.Map{
+				"message": "Offset failed parsing as int",
+				"valule":  offset,
+			},
+		})
+	}
+
+	order := c.Params("order", "desc")
+
+	feedItems, err := data.Communities.GetFeedItemsForCommunity(data.GetFeedItemsForCommunityRequest{
+		CommunityId: communityId,
+		Limit:       limit,
+		Offset:      offset,
+		Order:       order,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 200, feedItems)
+}
+
+type NewCommunityFeedItem struct {
+	Type string                 `json:"type"`
+	Data map[string]interface{} `json:"data"`
+}
+
+// @Id CreateCommunityFeedItem
+// @Summary Creates a new Community Feed Item
+// @Tags Communities
+// @Accept json
+//
+//	@Produce	application/vnd.api+json
+//
+// @Param requestBody body NewCommunityFeedItem true "Feed Item information"
+//
+// @Success 201 {object} SuccessResponse[data.CommunityFeedItem]
+// @Router /api/v1/communities/{id}/items [post]
+func (handlers *Handler) CreateCommunityFeedItem(c *fiber.Ctx) error {
+	_, span := tracer.Tracer.Start(c.UserContext(), "Handler::CreateCommunityFeedItem")
+	defer span.End()
+	communityId := c.Params("id")
+	user := c.Locals("user").(*data.User)
+
+	canCreateCommunityFeedItem := authorization.CanPerformAction(
+		user.Id,
+		fmt.Sprintf("community::%s", communityId),
+		"createFeedItem",
+	)
+
+	if !canCreateCommunityFeedItem {
+		return JSONAPI(c, 401, fiber.Map{
+			"message": "Not authorized to perform this action",
+		})
+	}
+
+	payload := NewCommunityFeedItem{}
+	err := c.BodyParser(&payload)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := data.Communities.CreateCommunityFeedItem(data.CreateCommunityFeedItemRequest{
+		CommunityId: communityId,
+		AuthorId:    user.Id,
+		Type:        payload.Type,
+		Data:        payload.Data,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return JSONAPI(c, 201, result)
+}
+
 type CommuntiyMemberProfileAvatarRequest struct {
 	Filename string `json:"filename"`
 }

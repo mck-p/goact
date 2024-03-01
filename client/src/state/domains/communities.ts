@@ -20,6 +20,15 @@ export interface CommunityMember {
   profile_schema: Record<string, any>
 }
 
+export interface CommunityFeedItem {
+  _id: string
+  type: string
+  created_at: string
+  updated_at: string
+  author_id: string
+  data: Record<string, unknown>
+}
+
 export enum PROFILE_ITEM_TYPE {
   TEXT = 'text',
   DATE = 'date',
@@ -95,18 +104,9 @@ export const CommunityNameLens = CommunityLens('name')
 
 export const communityApi = createApi({
   reducerPath: 'communityApi',
-  tagTypes: ['Communities', 'CommunityMembers'],
+  tagTypes: ['Communities', 'CommunityMembers', 'CommunityFeedItems'],
   baseQuery: fetchBaseQuery({
     baseUrl: COMMUNITIES_BASE_URL,
-    // prepareHeaders: (headers, { getState }) => {
-    //   const token = (getState() as any).auth.token
-
-    //   if (token) {
-    //     headers.set('authorization', `Bearer ${token}`)
-    //   }
-
-    //   return headers
-    // },
   }),
   endpoints: (build) => ({
     getCommunities: build.query<Community[], { token: string }>({
@@ -128,6 +128,24 @@ export const communityApi = createApi({
           Authorization: `Bearer ${token}`,
         },
       }),
+    }),
+    getCommunityFeedItems: build.query<
+      CommunityFeedItem[],
+      { token: string; id: string }
+    >({
+      query: ({ id, token }) => ({
+        url: `/${id}/items`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+      providesTags: (result) =>
+        result
+          ? result.map(({ _id }) => ({
+              type: 'CommunityFeedItems',
+              id: _id,
+            }))
+          : ['CommunityFeedItems'],
     }),
     getCommunityMembers: build.query<
       CommunityMember[],
@@ -182,6 +200,22 @@ export const communityApi = createApi({
         }
       },
       invalidatesTags: ['Communities'],
+    }),
+    postFeedItem: build.mutation<
+      CommunityFeedItem,
+      { item: Partial<CommunityFeedItem>; token: string; communityId: string }
+    >({
+      query({ item, token, communityId }) {
+        return {
+          url: `/${communityId}/items`,
+          method: 'POST',
+          body: item,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      },
+      invalidatesTags: ['CommunityFeedItems'],
     }),
     updateCommunityMemberProfile: build.mutation<
       CommunityMember,
@@ -238,6 +272,9 @@ export const {
 
   useGetCommunityMembersQuery,
   useLazyGetCommunityMembersQuery,
+
+  useLazyGetCommunityFeedItemsQuery,
+  usePostFeedItemMutation,
 
   useDeleteCommunityMutation,
   useGetCommunityMemberQuery,

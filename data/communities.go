@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+	"log/slog"
 	"mck-p/goact/connections"
 	"strings"
 	"time"
@@ -23,6 +25,16 @@ type CommunityMember struct {
 	UserAvatar    string                 `json:"user_avatar"`
 	Profile       map[string]interface{} `json:"profile"`
 	ProfileSchema map[string]interface{} `json:"profile_schema"`
+}
+
+type CommunityFeedItem struct {
+	Id          string                 `json:"_id"`
+	CommunityId string                 `json:"community_id"`
+	AuthorId    string                 `json:"author_id"`
+	Type        string                 `json:"type"`
+	Data        map[string]interface{} `json:"data"`
+	CreatedAt   time.Time              `json:"created_at"`
+	Updatedat   time.Time              `json:"updated_at"`
 }
 
 type ICommunities struct{}
@@ -287,4 +299,91 @@ func (communities *ICommunities) DeleteCommunity(cmd DeleteCommunityCommand) err
 	_, err := connections.Database.Exec(sql, cmd.Id)
 
 	return err
+}
+
+type GetFeedItemsForCommunityRequest struct {
+	CommunityId string
+	Limit       int
+	Offset      int
+	Order       string
+}
+
+func (communities *ICommunities) GetFeedItemsForCommunity(request GetFeedItemsForCommunityRequest) ([]CommunityFeedItem, error) {
+
+	sortOrder := "DESC"
+
+	if request.Order == "asc" {
+		sortOrder = "ASC"
+	}
+
+	sql := fmt.Sprintf(`
+		SELECT
+			community_feed_items._id as id,
+			community_feed_items.community_id as communityId,
+			community_feed_items.author_id as authorId,
+			community_feed_items.created_at as createdAt,
+			community_feed_items.updated_at as updatedAt,
+			community_feed_items.data as data,
+			community_feed_items.type as type
+		FROM
+			community_feed_items
+		WHERE
+			community_feed_items.community_id = $1
+		ORDER BY created_at %s
+		LIMIT $2
+		OFFSET $3
+	`, sortOrder)
+
+	rows, err := connections.Database.Query(sql, request.CommunityId, request.Limit, request.Offset)
+
+	slog.Info("This is rows", slog.Any("rows", rows), slog.String("sql", sql), slog.Any("args", request))
+
+	if err != nil {
+		slog.Info("Error getting rows", slog.Any("error", err), slog.String("sql", sql))
+
+		return []CommunityFeedItem{}, err
+	}
+
+	list, err := pgx.CollectRows(rows, pgx.RowToStructByName[CommunityFeedItem])
+
+	if err != nil {
+		return []CommunityFeedItem{}, err
+	}
+	return list, nil
+}
+
+type CreateCommunityFeedItemRequest struct {
+	Data        map[string]interface{}
+	Type        string
+	AuthorId    string
+	CommunityId string
+}
+
+func (communities *ICommunities) CreateCommunityFeedItem(request CreateCommunityFeedItemRequest) (CommunityFeedItem, error) {
+	sql := `
+		INSERT INTO community_feed_items(data, type, author_id, community_id)
+		VALUES
+		($1, $2, $3, $4)
+		RETURNING
+			_id as id,
+			community_id as communityId,
+			author_id as authorId,
+			created_at as createdAt,
+			updated_at as updatedAt,
+			type as type,
+			data as data
+	`
+	feedItem := CommunityFeedItem{}
+
+	row := connections.Database.QueryRow(sql, request.Data, request.Type, request.AuthorId, request.CommunityId)
+
+	return feedItem, row.Scan(
+		&feedItem.Id,
+		&feedItem.CommunityId,
+		&feedItem.AuthorId,
+		&feedItem.CreatedAt,
+		&feedItem.Updatedat,
+		&feedItem.Type,
+		&feedItem.Data,
+	)
 }

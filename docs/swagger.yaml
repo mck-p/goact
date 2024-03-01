@@ -31,6 +31,24 @@ definitions:
         additionalProperties: true
         type: object
     type: object
+  data.CommunityFeedItem:
+    properties:
+      _id:
+        type: string
+      author_id:
+        type: string
+      community_id:
+        type: string
+      created_at:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
   data.CommunityMember:
     properties:
       community:
@@ -207,6 +225,9 @@ definitions:
         type: boolean
       name:
         type: string
+      profile_schema:
+        additionalProperties: true
+        type: object
     type: object
   server.ErrorResponse-server_GenericError:
     properties:
@@ -277,6 +298,14 @@ definitions:
       name:
         type: string
     type: object
+  server.NewCommunityFeedItem:
+    properties:
+      data:
+        additionalProperties: true
+        type: object
+      type:
+        type: string
+    type: object
   server.SuccessResponse-any:
     properties:
       data: {}
@@ -294,6 +323,21 @@ definitions:
       data:
         items:
           $ref: '#/definitions/data.Community'
+        type: array
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-array_data_CommunityFeedItem:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/data.CommunityFeedItem'
         type: array
       includes:
         items: {}
@@ -323,6 +367,19 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/data.Community'
+      includes:
+        items: {}
+        type: array
+      links:
+        additionalProperties:
+          $ref: '#/definitions/server.Link'
+        type: object
+      metadata: {}
+    type: object
+  server.SuccessResponse-data_CommunityFeedItem:
+    properties:
+      data:
+        $ref: '#/definitions/data.CommunityFeedItem'
       includes:
         items: {}
         type: array
@@ -551,6 +608,44 @@ paths:
           schema:
             $ref: '#/definitions/server.ErrorResponse-server_GenericError'
       summary: Retrieves the Community of a given ID
+      tags:
+      - Communities
+  /api/v1/communities/{id}/items:
+    get:
+      operationId: GetcommunityFeedItems
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-array_data_CommunityFeedItem'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.ErrorResponse-server_GenericError'
+      summary: Retrieves the Community Feed Items of a given Community ID
+      tags:
+      - Communities
+    post:
+      consumes:
+      - application/json
+      operationId: CreateCommunityFeedItem
+      parameters:
+      - description: Feed Item information
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/server.NewCommunityFeedItem'
+      produces:
+      - application/vnd.api+json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.SuccessResponse-data_CommunityFeedItem'
+      summary: Creates a new Community Feed Item
       tags:
       - Communities
   /api/v1/communities/{id}/members:
